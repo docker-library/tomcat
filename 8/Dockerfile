@@ -26,7 +26,8 @@ RUN curl -SL "$TOMCAT_TGZ_URL" -o tomcat.tar.gz \
 	&& curl -SL "$TOMCAT_TGZ_URL.asc" -o tomcat.tar.gz.asc \
 	&& gpg --verify tomcat.tar.gz.asc \
 	&& tar -xvf tomcat.tar.gz -C /usr/local --strip-components=1 \
+	&& rm /usr/local/bin/*.bat \
 	&& rm tomcat.tar.gz*
 
 EXPOSE 80
-CMD ["catalina.sh"]
+CMD ["catalina.sh", "run"]
