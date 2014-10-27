@@ -3,8 +3,10 @@ set -e
 
 declare -A aliases
 aliases=(
-	[8]='latest'
 )
+defaultVersion='8'
+defaultJava='7'
+defaultSuffix="jre${defaultJava}"
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -17,15 +19,25 @@ echo '# maintainer: InfoSiftr <github@infosiftr.com> (@infosiftr)'
 for version in "${versions[@]}"; do
 	commit="$(git log -1 --format='format:%H' -- "$version")"
 	
-	fullVersion="$(grep -m1 'ENV TOMCAT_VERSION ' "$version/Dockerfile" | cut -d' ' -f3)"
-	majorVersion=${fullVersion%.*}
+	majorVersion="${version%%-*}"
+	suffix="${version#*-}" # "jre7"
 	
-	versionAliases=()
-	bases=( $fullVersion $majorVersion $version ${aliases[$version]} )
-	for base in "${bases[@]}"; do
-		versionAliases+=( "$base-jre7" )
-		versionAliases+=( "$base" )
-	done
+	fullVersion="$(grep -m1 'ENV TOMCAT_VERSION ' "$version/Dockerfile" | cut -d' ' -f3)"
+	majorMinorVersion="${fullVersion%.*}"
+	
+	versionAliases=( $fullVersion-$suffix $majorMinorVersion-$suffix $majorVersion-$suffix ) # 8.0.14-jre7 8.0-jre7 8-jre7
+	if [ "$majorVersion" = "$defaultVersion" ]; then
+		versionAliases+=( $suffix ) # jre7
+	fi
+	
+	if [ "$suffix" = "$defaultSuffix" ]; then
+		versionAliases+=( $fullVersion $majorMinorVersion $majorVersion ) # 8.0.14 8.0 8
+		if [ "$majorVersion" = "$defaultVersion" ]; then
+			versionAliases+=( latest )
+		fi
+	fi
+	
+	versionAliases+=( ${aliases[$version]} )
 	
 	echo
 	for va in "${versionAliases[@]}"; do
