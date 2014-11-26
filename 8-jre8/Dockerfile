@@ -1,13 +1,9 @@
 FROM java:8-jre
 
-# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r tomcat && useradd -r --create-home -g tomcat tomcat
-
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
-RUN mkdir -p "$CATALINA_HOME" && chown tomcat:tomcat "$CATALINA_HOME"
+RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
-USER tomcat
 
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
 RUN gpg --keyserver pgp.mit.edu --recv-keys \
