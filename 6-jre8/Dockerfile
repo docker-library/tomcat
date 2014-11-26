@@ -27,7 +27,7 @@ RUN gpg --keyserver pgp.mit.edu --recv-keys \
 	F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 
 ENV TOMCAT_MAJOR 6
-ENV TOMCAT_VERSION 6.0.41
+ENV TOMCAT_VERSION 6.0.43
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN curl -SL "$TOMCAT_TGZ_URL" -o tomcat.tar.gz \
