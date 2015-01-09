@@ -6,7 +6,7 @@ RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
 
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
-RUN gpg --keyserver pgp.mit.edu --recv-keys \
+RUN gpg --keyserver pool.sks-keyservers.net --recv-keys \
 	05AB33110949707C93A279E3D3EFE6B686867BA6 \
 	07E48665A34DCAFAE522E5E6266191C37C037D42 \
 	47309207D818FFD8DCD3F83F1931D684307A10A5 \
