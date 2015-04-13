@@ -20,7 +20,7 @@ for version in "${versions[@]}"; do
 			;;
 	esac
 	
-	fullVersion="$(curl -sSL --compressed "https://www.apache.org/dist/tomcat/tomcat-$majorVersion/" | grep '<a href="v'"$majorVersion." | sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' | sort -V | tail -1)"
+	fullVersion="$(curl -fsSL --compressed "https://www.apache.org/dist/tomcat/tomcat-$majorVersion/" | grep '<a href="v'"$majorVersion." | sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' | sort -V | tail -1)"
 	(
 		set -x
 		sed -ri '
