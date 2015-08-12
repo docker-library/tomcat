@@ -1,0 +1,29 @@
+language: bash
+
+# for secret experimental features ;)
+sudo: 9000
+
+env:
+  - VERSION=8-jre8
+  - VERSION=8-jre7
+  - VERSION=7-jre8
+  - VERSION=7-jre7
+  - VERSION=6-jre8
+  - VERSION=6-jre7
+
+install:
+  - git clone https://github.com/docker-library/official-images.git ~/official-images
+
+before_script:
+  - env | sort
+  - cd "$VERSION"
+  - image="tomcat:$VERSION"
+
+script:
+  - docker build -t "$image" .
+  - ~/official-images/test/run.sh "$image"
+
+after_script:
+  - docker images
+
+# vim:set et ts=2 sw=2:

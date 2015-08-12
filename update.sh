@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -9,6 +9,7 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
+travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%-*}" # "6"
 	suffix="${version#*-}" # "jre7"
@@ -29,4 +30,9 @@ for version in "${versions[@]}"; do
 			s/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/;
 		' "$version/Dockerfile"
 	)
+	
+	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
+
+travis="$(awk -v 'RS=\n\n' '$1 == "env:" { $0 = "env:'"$travisEnv"'" } { printf "%s%s", $0, RS }' .travis.yml)"
+echo "$travis" > .travis.yml
