@@ -34,5 +34,18 @@ RUN set -x \
 	&& rm bin/*.bat \
 	&& rm tomcat.tar.gz*
 
+RUN set -x \
+	&& apt-get update \
+	&& apt-get install -yq gcc make openssl libssl-dev libapr1 libapr1-dev openjdk-8-jdk="$JAVA_DEBIAN_VERSION" \
+	&& tar zxf /usr/local/tomcat/bin/tomcat-native.tar.gz -C /tmp \
+	&& cd /tmp/tomcat-native*-src/jni/native/ \
+	&& ./configure --with-apr=/usr/bin/apr-1-config --with-java-home=/usr/lib/jvm/java-8-openjdk-amd64/ --with-ssl=yes --libdir=/usr/lib/jni \
+	&& make \
+	&& make install \
+	&& apt-get purge -y openjdk-8-jdk="$JAVA_DEBIAN_VERSION" gcc make libssl-dev libapr1-dev \
+	&& apt-get -y autoremove \
+	&& rm -rf /tmp/tomcat-native* \
+	&& rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
