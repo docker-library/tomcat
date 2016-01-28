@@ -24,6 +24,7 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys \
 ENV TOMCAT_MAJOR 7
 ENV TOMCAT_VERSION 7.0.67
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
+ENV TOMCAT_JMX_REMOTE_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/extras/catalina-jmx-remote.jar
 
 RUN set -x \
 	&& curl -fSL "$TOMCAT_TGZ_URL" -o tomcat.tar.gz \
@@ -31,7 +32,11 @@ RUN set -x \
 	&& gpg --verify tomcat.tar.gz.asc \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
-	&& rm tomcat.tar.gz*
+	&& rm tomcat.tar.gz* \
+	&& curl -fSL "$TOMCAT_JMX_REMOTE_URL" -o catalina-jmx-remote.jar \
+	&& curl -fSL "$TOMCAT_JMX_REMOTE_URL.asc" -o catalina-jmx-remote.jar.asc \
+	&& gpg --verify catalina-jmx-remote.jar.asc \
+	&& mv catalina-jmx-remote.jar* ./lib
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
