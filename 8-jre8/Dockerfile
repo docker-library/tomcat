@@ -33,4 +33,5 @@ RUN set -x \
 	&& rm tomcat.tar.gz*
 
 EXPOSE 8080
+VOLUME ["$CATALINA_HOME/logs", "$CATALINA_HOME/webapps"]
 CMD ["catalina.sh", "run"]
