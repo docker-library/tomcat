@@ -33,5 +33,27 @@ RUN set -x \
 	&& rm bin/*.bat \
 	&& rm tomcat.tar.gz*
 
+#Установка Apache Portable Runtime
+RUN apt-get update && \
+    apt-get install -y libapr1-dev libaprutil1-dev && \
+	cd /tmp  && \
+	curl http://ftp.mirror.tw/pub/apache/apr/apr-1.5.2.tar.gz | tar xvz  && \
+	curl http://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-connectors/native/1.1.34/source/tomcat-native-1.1.34-src.tar.gz | tar xvz  && \
+	curl http://ftp.mirror.tw/pub/apache/apr/apr-util-1.5.4.tar.gz | tar xvz  && \
+	cd /tmp/apr-1.5.2  && \
+	./configure  && \
+	make  && \
+	make install  && \
+	cd /tmp/apr-util-1.5.4  && \
+	./configure --with-apr=/usr/local/apr  && \
+	make  && \
+	make install  && \
+    cd /tmp/tomcat-native-1.1.34-src/jni/native &&\
+	./configure --with-apr=/usr/local/apr --with-java-home=$JAVA_HOME6 &&\
+	 make &&\
+	make install	 &&\
+    apt-get clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
