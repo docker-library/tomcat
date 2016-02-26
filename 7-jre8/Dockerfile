@@ -33,9 +33,10 @@ RUN set -x \
 	&& rm bin/*.bat \
 	&& rm tomcat.tar.gz*
 
-#Установка Apache Portable Runtime
-RUN apt-get update && \
-    apt-get install -y libapr1-dev libaprutil1-dev && \
+#Install Apache Portable Runtime
+RUN set -x &&\
+	apt-get update && \
+    apt-get install -yq gcc make openssl libssl-dev libapr1 libapr1-dev libaprutil1 make openjdk-8-jdk="$JAVA_DEBIAN_VERSION"  &&\
 	cd /tmp  && \
 	curl http://ftp.mirror.tw/pub/apache/apr/apr-1.5.2.tar.gz | tar xvz  && \
 	curl http://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-connectors/native/1.1.34/source/tomcat-native-1.1.34-src.tar.gz | tar xvz  && \
@@ -47,13 +48,13 @@ RUN apt-get update && \
 	cd /tmp/apr-util-1.5.4  && \
 	./configure --with-apr=/usr/local/apr  && \
 	make  && \
-	make install  && \
-    cd /tmp/tomcat-native-1.1.34-src/jni/native &&\
-	./configure --with-apr=/usr/local/apr --with-java-home=$JAVA_HOME6 &&\
+	make install && \
+    cd /tmp/tomcat-native*-src/jni/native/ &&\
+	./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni &&\
 	 make &&\
 	make install	 &&\
-    apt-get clean && \
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    apt-get clean
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]

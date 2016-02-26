@@ -53,8 +53,9 @@ RUN set -x &&\
 	./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni &&\
 	 make &&\
 	make install	 &&\
-    apt-get clean && \
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    apt-get clean
+
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
