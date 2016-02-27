@@ -1,4 +1,4 @@
-FROM java:7-jre
+FROM java:0-jre
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -24,9 +24,9 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys \
 	F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE \
 	F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 
-ENV JAVA_MAJOR_VER 7
-ENV TOMCAT_MAJOR 8
-ENV TOMCAT_VERSION 8.0.32
+ENV JAVA_MAJOR_VER 0
+ENV TOMCAT_MAJOR 0
+ENV TOMCAT_VERSION 0
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
@@ -42,9 +42,9 @@ RUN set -x \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& apt-get clean
 
-ENV APR_VER apr-1.5.2
-ENV APR_UTIL_VER apr-util-1.5.4
-ENV TOMCAT_NATIVE_VERSION 1.1.34
+ENV APR_VER 0
+ENV APR_UTIL_VER 0
+ENV TOMCAT_NATIVE_VERSION 0
 
 #Install Apache Portable Runtime
 RUN set -x \

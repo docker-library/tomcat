@@ -15,47 +15,56 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys \
 	79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED \
 	80FF76D88A969FE46108558A80B953A041E49465 \
 	8B39757B1D8A994DF2433ED58B3A601F08C975E5 \
+	B3F49CD3B9BD2996DA90F817ED3873F5D3262722 \
+	713DA88BE50911535FE716F5208B0AB1D63011C7 \
+	9BA44C2621385CB966EBA586F72C284D731FABEE \
 	A27677289986DB50844682F8ACB77FC2E86E29AC \
 	A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 \
-	B3F49CD3B9BD2996DA90F817ED3873F5D3262722 \
 	DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 \
 	F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE \
 	F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 
+ENV JAVA_MAJOR_VER 8
 ENV TOMCAT_MAJOR 6
 ENV TOMCAT_VERSION 6.0.45
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
 	&& curl -fSL "$TOMCAT_TGZ_URL" -o tomcat.tar.gz \
-	&& curl -fSL "$TOMCAT_TGZ_URL.asc" -o tomcat.tar.gz.asc \
+    && curl -fSL "$TOMCAT_TGZ_URL.asc" -o tomcat.tar.gz.asc \
 	&& gpg --verify tomcat.tar.gz.asc \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
-	&& rm tomcat.tar.gz*
+	&& rm bin/*.gz \
+	&& rm tomcat.tar.gz* \
+	&& apt-get update \
+	&& apt-get install -yq gcc make openssl libssl-dev libapr1 libapr1-dev libaprutil1 make openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+	&& apt-get clean
+
+ENV APR_VER apr-1.5.2
+ENV APR_UTIL_VER apr-util-1.5.4
+ENV TOMCAT_NATIVE_VERSION 1.1.34
 
 #Install Apache Portable Runtime
-RUN set -x &&\
-	apt-get update && \
-    apt-get install -yq gcc make openssl libssl-dev libapr1 libapr1-dev libaprutil1 make openjdk-8-jdk="$JAVA_DEBIAN_VERSION"  &&\
-	cd /tmp  && \
-	curl http://ftp.mirror.tw/pub/apache/apr/apr-1.5.2.tar.gz | tar xvz  && \
-	curl http://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-connectors/native/1.1.34/source/tomcat-native-1.1.34-src.tar.gz | tar xvz  && \
-	curl http://ftp.mirror.tw/pub/apache/apr/apr-util-1.5.4.tar.gz | tar xvz  && \
-	cd /tmp/apr-1.5.2  && \
-	./configure  && \
-	make  && \
-	make install  && \
-	cd /tmp/apr-util-1.5.4  && \
-	./configure --with-apr=/usr/local/apr  && \
-	make  && \
-	make install && \
-    cd /tmp/tomcat-native*-src/jni/native/ &&\
-	./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni &&\
-	 make &&\
-	make install	 &&\
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    apt-get clean
+RUN set -x \
+	&& APACHE_MIRROR=$(curl -s "http://www.apache.org/dyn/closer.cgi/tomcat/?as_json=1" | grep -Po '\"preferred\": \"\K[^\"]+') \
+	&&	curl ${APACHE_MIRROR}apr/$APR_VER.tar.gz | tar xvz -C /tmp \
+	&&	curl ${APACHE_MIRROR}apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
+	&&	curl ${APACHE_MIRROR}tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION}/source/tomcat-native-${TOMCAT_NATIVE_VERSION}-src.tar.gz  | tar xvz -C /tmp \
+	&& cd /tmp/$APR_VER  \
+	&& ./configure  \
+	&& make   \
+	&& make install  \
+	&& cd /tmp/$APR_UTIL_VER \
+	&& ./configure --with-apr=/usr/local/apr  \
+	&& make  \
+	&& make install \
+	&& cd /tmp/tomcat-native*-src/jni/native/ \
+	&& ./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni \
+	&& make \
+	&& make install	\
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
