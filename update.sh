@@ -2,7 +2,6 @@
 set -eo pipefail
 
 #Download latest LIB version
-tomcatNativeVersion="$(curl -s "https://www.apache.org/dist/tomcat/tomcat-connectors/native/" | grep '<a href="1.1.' | sed -r 's!.*<a href="(1.1.[^"/]+)/".*!\1!' | sort -V | tail -1)"
 APACHE_MIRROR=$(curl -s "http://www.apache.org/dyn/closer.cgi/tomcat/?as_json=1" | grep -Po '\"preferred\": \"\K[^\"]+')
 `curl -fsSL --compressed "${APACHE_MIRROR}apr/" | grep '<a href="apr' > /tmp/apr.html`
 aprVersion="$(cat /tmp/apr.html | grep '<a href="apr-[0-9].[0-9].[0-9].tar.gz"' | sed -r 's!.*<a href="([^"/]+).tar.gz".*!\1!' | sort -V | tail -1)"
@@ -43,7 +42,6 @@ for version in "${versions[@]}"; do
 			s/^(ENV APR_VER) .*/\1 '"$aprVersion"'/;
 			s/^(ENV APR_UTIL_VER) .*/\1 '"$aprUtilVersion"'/;
 			s/^(ENV JAVA_MAJOR_VER) .*/\1 '"$javaMajorVersion"'/;
-			s/^(ENV TOMCAT_NATIVE_VERSION) .*/\1 '"$tomcatNativeVersion"'/;
 			s/(TOMCAT_MAJOR_VERSION)/'"$majorVersion"'/;
 		' "$version/Dockerfile"
 	)

@@ -35,23 +35,19 @@ RUN set -x \
 	&& gpg --verify tomcat.tar.gz.asc \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
-	&& rm bin/*.gz \
-	&& rm tomcat.tar.gz* \
-	&& apt-get update \
-	&& apt-get install -yq gcc make openssl libssl-dev libapr1 libapr1-dev libaprutil1 make openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
-	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-	&& apt-get clean
+	&& rm tomcat.tar.gz*
 
 ENV APR_VER apr-1.5.2
 ENV APR_UTIL_VER apr-util-1.5.4
-ENV TOMCAT_NATIVE_VERSION 1.1.34
 
 #Install Apache Portable Runtime
-RUN set -x \
+RUN	set -x \
+	&& apt-get update \
+	&& apt-get install -yq  gcc make openssl libssl-dev libapr1 libapr1-dev openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& APACHE_MIRROR=$(curl -s "http://www.apache.org/dyn/closer.cgi/tomcat/?as_json=1" | grep -Po '\"preferred\": \"\K[^\"]+') \
 	&&	curl ${APACHE_MIRROR}apr/$APR_VER.tar.gz | tar xvz -C /tmp \
 	&&	curl ${APACHE_MIRROR}apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
-	&&	curl ${APACHE_MIRROR}tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION}/source/tomcat-native-${TOMCAT_NATIVE_VERSION}-src.tar.gz  | tar xvz -C /tmp \
 	&& cd /tmp/$APR_VER  \
 	&& ./configure  \
 	&& make   \
@@ -60,11 +56,15 @@ RUN set -x \
 	&& ./configure --with-apr=/usr/local/apr  \
 	&& make  \
 	&& make install \
+	&& tar zxf ${CATALINA_HOME}/bin/tomcat-native.tar.gz -C /tmp \
 	&& cd /tmp/tomcat-native*-src/jni/native/ \
 	&& ./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni \
 	&& make \
 	&& make install	\
-	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+	&& apt-get purge -y openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION" gcc make libssl-dev libapr1-dev \
+	&& apt-get -y autoremove \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*\
+	&& apt-get clean
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
