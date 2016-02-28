@@ -20,7 +20,7 @@ travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%-*}" # "6"
 	suffix="${version#*-}" # "jre7"
-	javaMajorVersion="${version#*-jre}" # "jre7"
+	javaMajorVersion="${version#*-jre}" # "7"
 
 	baseImage='java'
 	case "$suffix" in
@@ -45,6 +45,7 @@ for version in "${versions[@]}"; do
 			s/^(ENV TOMCAT_NATIVE_VERSION) .*/\1 '"$tomcatNativeVersion"'/;
 		' "$version/Dockerfile"
 	)
+
 	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
 
