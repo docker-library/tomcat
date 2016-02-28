@@ -45,7 +45,7 @@ ENV TOMCAT_NATIVE_VERSION 0
 RUN	set -x \
 	&& apt-get update \
 	&& apt-get install -yq build-essential gcc make openssl libssl-dev libapr1 libapr1-dev openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
-	&&	curl https://www.apache.org/dist/tomcat/apr/$APR_VER.tar.gz | tar xvz -C /tmp \
+	&&	curl https://www.apache.org/dist/apr/$APR_VER.tar.gz | tar xvz -C /tmp \
 	&&	curl https://www.apache.org/dist/apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
 	&&	curl https://www.apache.org/dist/tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION}/source/tomcat-native-${TOMCAT_NATIVE_VERSION}-src.tar.gz  | tar xvz -C /tmp \
 	&& cd /tmp/$APR_VER  \
