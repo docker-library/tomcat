@@ -39,20 +39,20 @@ RUN	set -x \
 	&& apt-get update \
 	&& apt-get install -yq gcc make libssl-dev libapr1 libapr1-dev openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
 	&&	curl https://www.apache.org/dist/apr/$APR_VER.tar.gz | tar xvz -C /tmp \
-	&& cd /tmp/$APR_VER  \
+	&& (cd /tmp/$APR_VER  \
 	&& ./configure  \
 	&& make   \
-	&& make install  \
+	&& make install)  \
 	&&	curl https://www.apache.org/dist/apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
-	&& cd /tmp/$APR_UTIL_VER \
+	&& (cd /tmp/$APR_UTIL_VER \
 	&& ./configure --with-apr=/usr/local/apr  \
 	&& make  \
-	&& make install \
+	&& make install) \
 	&&	curl https://www.apache.org/dist/tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION}/source/tomcat-native-${TOMCAT_NATIVE_VERSION}-src.tar.gz  | tar xvz -C /tmp \
-	&& cd /tmp/tomcat-native*-src/jni/native/ \
+	&& (cd /tmp/tomcat-native*-src/jni/native/ \
 	&& ./configure --with-apr=/usr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni \
 	&& make \
-	&& make install	\
+	&& make install )\
 	&& apt-get purge -y openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION" gcc make libssl-dev libapr1-dev \
 	&& apt-get -y autoremove \
 	&& apt-get clean \
