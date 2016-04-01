@@ -6,10 +6,12 @@ declare -A latestVariant=(
 	[7]='jre7'
 	[8.0]='jre7'
 	[8.5]='jre8'
+	[9.0]='jre8'
 )
 latestVersion='8.0'
 declare -A aliases=(
 	[8.0]='8'
+	[9.0]='9'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
