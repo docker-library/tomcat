@@ -2,20 +2,22 @@ language: bash
 services: docker
 
 env:
-  - VERSION=8-jre8
-  - VERSION=8-jre7
-  - VERSION=7-jre8
-  - VERSION=7-jre7
-  - VERSION=6-jre8
-  - VERSION=6-jre7
+  - VERSION=9.0 VARIANT=jre8
+  - VERSION=8.5 VARIANT=jre8
+  - VERSION=8.0 VARIANT=jre8
+  - VERSION=8.0 VARIANT=jre7
+  - VERSION=7 VARIANT=jre8
+  - VERSION=7 VARIANT=jre7
+  - VERSION=6 VARIANT=jre8
+  - VERSION=6 VARIANT=jre7
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
 
 before_script:
   - env | sort
-  - cd "$VERSION"
-  - image="tomcat:$VERSION"
+  - cd "$VERSION/$VARIANT"
+  - image="tomcat:$VERSION-$VARIANT"
 
 script:
   - docker build -t "$image" .
