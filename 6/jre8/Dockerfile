@@ -26,6 +26,35 @@ RUN set -ex \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
 
+ENV JAVA_MAJOR_VER 8
+ENV APR_VER apr-1.5.2
+ENV APR_UTIL_VER apr-util-1.5.4
+ENV TOMCAT_NATIVE_VERSION_1_1 1.1.34
+
+#Install Apache Portable Runtime
+RUN	set -x \
+	&& apt-get update \
+	&& apt-get install -yq --no-install-recommends gcc make libssl-dev openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
+	&&	curl https://www.apache.org/dist/apr/$APR_VER.tar.gz | tar xvz -C /tmp \
+	&& cd /tmp/$APR_VER  \
+	&& ./configure  \
+	&& make   \
+	&& make install  \
+	&&	curl https://www.apache.org/dist/apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
+	&& cd /tmp/$APR_UTIL_VER \
+	&& ./configure --with-apr=/usr/local/apr  \
+	&& make  \
+	&& make install \
+	&&	curl https://www.apache.org/dist/tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION_1_1}/source/tomcat-native-${TOMCAT_NATIVE_VERSION_1_1}-src.tar.gz  | tar xvz -C /tmp \
+	&& cd /tmp/tomcat-native*-src/jni/native/ \
+	&& ./configure --with-apr=/usr/local/apr/bin/apr-1-config --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni \
+	&& make \
+	&& make install \
+	&& apt-get purge -y openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION" gcc make libssl-dev \
+	&& apt-get -y autoremove \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 ENV TOMCAT_MAJOR 6
 ENV TOMCAT_VERSION 6.0.45
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz

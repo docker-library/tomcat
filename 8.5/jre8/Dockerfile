@@ -24,6 +24,46 @@ RUN set -ex \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
 
+ENV JAVA_MAJOR_VER 8
+ENV APR_VER apr-1.5.2
+ENV APR_UTIL_VER apr-util-1.5.4
+ENV TOMCAT_NATIVE_VERSION_1_2 1.2.5
+
+#Install Apache Portable Runtime
+RUN	set -x \
+	&& apt-get update \
+	&& apt-get install -yq gcc make \
+	&& apt-get install -yq --no-install-recommends openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION"  \
+	&& curl http://www.openssl.org/source/openssl-1.0.2g.tar.gz | tar xvz -C /tmp \
+	&& cd /tmp/openssl-1.0.2g \
+	&& CFLAGS=-fPIC \
+	&& ./config shared --prefix=/usr/ \
+	&& make \
+	&& make install \
+	&& rm -rf /tmp/openssl-1.0.2g \
+	&&	curl https://www.apache.org/dist/apr/$APR_VER.tar.gz | tar xvz -C /tmp \
+	&& cd /tmp/$APR_VER  \
+	&& ./configure  \
+	&& make   \
+	&& make install  \
+	&& rm -rf /tmp/$APR_VER \
+	&&	curl https://www.apache.org/dist/apr/$APR_UTIL_VER.tar.gz | tar xvz -C /tmp \
+	&& cd /tmp/$APR_UTIL_VER \
+	&& ./configure --with-apr=/usr/local/apr  \
+	&& make  \
+	&& make install \
+	&& rm -rf /tmp/$APR_UTIL_VER \
+	&&	curl https://www.apache.org/dist/tomcat/tomcat-connectors/native/${TOMCAT_NATIVE_VERSION_1_2}/source/tomcat-native-${TOMCAT_NATIVE_VERSION_1_2}-src.tar.gz  | tar xvz -C /tmp \
+	&& cd /tmp/tomcat-native*-src/native/ \
+	&& ./configure --with-apr=/usr/local/apr --with-java-home=$JAVA_HOME/.. --with-ssl=yes --libdir=/usr/lib/jni \
+	&& make \
+	&& make install \
+	&& rm -rf /tmp/tomcat-native*-src \
+	&& apt-get purge -y openjdk-${JAVA_MAJOR_VER}-jdk="$JAVA_DEBIAN_VERSION" gcc make \
+	&& apt-get -y autoremove \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*./up
+
 ENV TOMCAT_MAJOR 8
 ENV TOMCAT_VERSION 8.5.0
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
@@ -35,6 +75,16 @@ RUN set -x \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
 	&& rm tomcat.tar.gz*
+
+# verify Tomcat Native is working properly
+RUN set -e \
+	&& nativeLines="$(catalina.sh configtest 2>&1)" \
+	&& nativeLines="$(echo "$nativeLines" | grep 'Apache Tomcat Native')" \
+	&& nativeLines="$(echo "$nativeLines" | sort -u)" \
+	&& if ! echo "$nativeLines" | grep 'INFO: Loaded APR based Apache Tomcat Native library' >&2; then \
+		echo >&2 "$nativeLines"; \
+		exit 1; \
+	fi
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
