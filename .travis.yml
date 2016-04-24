@@ -16,8 +16,8 @@ install:
 
 before_script:
   - env | sort
-  - cd "$VERSION"
-  - image="tomcat:$VERSION"
+  - cd "$VERSION/$VARIANT"
+  - image="tomcat:$VERSION-$VARIANT"
 
 script:
   - docker build -t "$image" .
