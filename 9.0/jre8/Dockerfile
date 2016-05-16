@@ -28,7 +28,7 @@ RUN set -ex \
 	done
 
 ENV TOMCAT_MAJOR 9
-ENV TOMCAT_VERSION 9.0.0.M4
+ENV TOMCAT_VERSION 9.0.0.M6
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 # Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
