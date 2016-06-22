@@ -5,8 +5,28 @@ ENV PATH $CATALINA_HOME/bin:$PATH
 RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
 
-# runtime dependency for Tomcat Native Libraries
-RUN apt-get update && apt-get install -y libapr1 && rm -rf /var/lib/apt/lists/*
+# runtime dependencies for Tomcat Native Libraries
+# Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
+# see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
+ENV OPENSSL_VERSION 1.0.2h-1
+RUN { \
+		echo 'deb http://httpredir.debian.org/debian unstable main'; \
+	} > /etc/apt/sources.list.d/unstable.list \
+	&& { \
+# add a negative "Pin-Priority" so that we never ever get packages from unstable unless we explicitly request them
+		echo 'Package: *'; \
+		echo 'Pin: release a=unstable'; \
+		echo 'Pin-Priority: -10'; \
+		echo; \
+# except OpenSSL, which is the reason we're here
+		echo 'Package: openssl libssl*'; \
+		echo "Pin: version $OPENSSL_VERSION"; \
+		echo 'Pin-Priority: 990'; \
+	} > /etc/apt/preferences.d/unstable-openssl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		libapr1 \
+		openssl="$OPENSSL_VERSION" \
+	&& rm -rf /var/lib/apt/lists/*
 
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
 RUN set -ex \
@@ -29,7 +49,7 @@ RUN set -ex \
 	done
 
 ENV TOMCAT_MAJOR 7
-ENV TOMCAT_VERSION 7.0.69
+ENV TOMCAT_VERSION 7.0.70
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
@@ -53,7 +73,7 @@ RUN set -x \
 	&& apt-get update && apt-get install -y --no-install-recommends $nativeBuildDeps && rm -rf /var/lib/apt/lists/* \
 	&& ( \
 		export CATALINA_HOME="$PWD" \
-		&& cd "$nativeBuildDir/jni/native" \
+		&& cd "$nativeBuildDir/native" \
 		&& ./configure \
 			--libdir=/usr/lib/jni \
 			--prefix="$CATALINA_HOME" \
