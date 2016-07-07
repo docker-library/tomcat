@@ -16,11 +16,14 @@ for version in "${versions[@]}"; do
 	
 	for variant in "$version"/*/; do
 		variant="$(basename "$variant")"
+		javaVariant="${variant%%-*}"
+		subVariant="${variant#$javaVariant-}"
+		[ "$subVariant" != "$variant" ] || subVariant=
 		
 		baseImage='java'
-		case "$variant" in
+		case "$javaVariant" in
 			jre*|jdk*)
-				baseImage+=":${variant:3}-${variant:0:3}" # ":7-jre"
+				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jre" or ":7-jre-alpine"
 				;;
 			*)
 				echo >&2 "not sure what to do with $version/$variant re: baseImage; skipping"
@@ -30,6 +33,9 @@ for version in "${versions[@]}"; do
 		
 		(
 			set -x
+			if [ "$majorVersion" != '6' ]; then
+				cp -v "Dockerfile${subVariant:+-$subVariant}.template" "$version/$variant/Dockerfile"
+			fi
 			sed -ri '
 				s/^(FROM) .*/\1 '"$baseImage"'/;
 				s/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/;

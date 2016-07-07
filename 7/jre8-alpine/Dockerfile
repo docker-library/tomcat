@@ -1,4 +1,4 @@
-FROM java:8-jre
+FROM java:8-jre-alpine
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -9,28 +9,7 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# runtime dependencies for Tomcat Native Libraries
-# Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
-# see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
-ENV OPENSSL_VERSION 1.0.2h-1
-RUN { \
-		echo 'deb http://httpredir.debian.org/debian unstable main'; \
-	} > /etc/apt/sources.list.d/unstable.list \
-	&& { \
-# add a negative "Pin-Priority" so that we never ever get packages from unstable unless we explicitly request them
-		echo 'Package: *'; \
-		echo 'Pin: release a=unstable'; \
-		echo 'Pin-Priority: -10'; \
-		echo; \
-# except OpenSSL, which is the reason we're here
-		echo 'Package: openssl libssl*'; \
-		echo "Pin: version $OPENSSL_VERSION"; \
-		echo 'Pin-Priority: 990'; \
-	} > /etc/apt/preferences.d/unstable-openssl
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		libapr1 \
-		openssl="$OPENSSL_VERSION" \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache gnupg
 
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
 RUN set -ex \
@@ -52,12 +31,16 @@ RUN set -ex \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
 
-ENV TOMCAT_MAJOR 9
-ENV TOMCAT_VERSION 9.0.0.M8
+ENV TOMCAT_MAJOR 7
+ENV TOMCAT_VERSION 7.0.70
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
 	\
+	&& apk add --no-cache --virtual .fetch-deps \
+		ca-certificates \
+		tar \
+		openssl \
 	&& wget -O tomcat.tar.gz "$TOMCAT_TGZ_URL" \
 	&& wget -O tomcat.tar.gz.asc "$TOMCAT_TGZ_URL.asc" \
 	&& gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz \
@@ -67,14 +50,13 @@ RUN set -x \
 	\
 	&& nativeBuildDir="$(mktemp -d)" \
 	&& tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1 \
-	&& nativeBuildDeps=" \
+	&& apk add --no-cache --virtual .native-build-deps \
+		apr-dev \
 		gcc \
-		libapr1-dev \
-		libssl-dev \
+		libc-dev \
 		make \
-		openjdk-${JAVA_VERSION%%[-~bu]*}-jdk=$JAVA_DEBIAN_VERSION \
-	" \
-	&& apt-get update && apt-get install -y --no-install-recommends $nativeBuildDeps && rm -rf /var/lib/apt/lists/* \
+		"openjdk${JAVA_VERSION%%[-~bu]*}"="$JAVA_ALPINE_VERSION" \
+		openssl-dev \
 	&& ( \
 		export CATALINA_HOME="$PWD" \
 		&& cd "$nativeBuildDir/native" \
@@ -84,10 +66,18 @@ RUN set -x \
 			--with-apr="$(which apr-1-config)" \
 			--with-java-home="$(docker-java-home)" \
 			--with-ssl=yes \
-		&& make -j$(nproc) \
+		&& make -j$(getconf _NPROCESSORS_ONLN) \
 		&& make install \
 	) \
-	&& apt-get purge -y --auto-remove $nativeBuildDeps \
+	&& runDeps="$( \
+		scanelf --needed --nobanner --recursive "$TOMCAT_NATIVE_LIBDIR" \
+			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+			| sort -u \
+			| xargs -r apk info --installed \
+			| sort -u \
+	)" \
+	&& apk add --virtual .tomcat-native-rundeps $runDeps \
+	&& apk del .fetch-deps .native-build-deps \
 	&& rm -rf "$nativeBuildDir" \
 	&& rm bin/tomcat-native.tar.gz
 

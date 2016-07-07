@@ -5,6 +5,10 @@ ENV PATH $CATALINA_HOME/bin:$PATH
 RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
 
+# let "Tomcat Native" live somewhere isolated
+ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
 # runtime dependencies for Tomcat Native Libraries
 # Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
@@ -36,6 +40,7 @@ RUN set -ex \
 		47309207D818FFD8DCD3F83F1931D684307A10A5 \
 		541FBE7D8F78B25E055DDEE13C370389288584E7 \
 		61B832AC2F1C5A90F0F9B00A1C506407564C17A3 \
+		713DA88BE50911535FE716F5208B0AB1D63011C7 \
 		79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED \
 		9BA44C2621385CB966EBA586F72C284D731FABEE \
 		A27677289986DB50844682F8ACB77FC2E86E29AC \
@@ -53,8 +58,8 @@ ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOM
 
 RUN set -x \
 	\
-	&& curl -fSL "$TOMCAT_TGZ_URL" -o tomcat.tar.gz \
-	&& curl -fSL "$TOMCAT_TGZ_URL.asc" -o tomcat.tar.gz.asc \
+	&& wget -O tomcat.tar.gz "$TOMCAT_TGZ_URL" \
+	&& wget -O tomcat.tar.gz.asc "$TOMCAT_TGZ_URL.asc" \
 	&& gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
@@ -74,9 +79,9 @@ RUN set -x \
 		export CATALINA_HOME="$PWD" \
 		&& cd "$nativeBuildDir/native" \
 		&& ./configure \
-			--libdir=/usr/lib/jni \
+			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
-			--with-apr=/usr/bin/apr-1-config \
+			--with-apr="$(which apr-1-config)" \
 			--with-java-home="$(docker-java-home)" \
 			--with-ssl=yes \
 		&& make -j$(nproc) \
