@@ -57,7 +57,7 @@ join() {
 }
 
 for version in "${versions[@]}"; do
-	for variant in jre7 jre8 jre9; do
+	for variant in jre{7,8,9}{,-alpine}; do
 		[ -f "$version/$variant/Dockerfile" ] || continue
 
 		commit="$(dirCommit "$version/$variant")"
@@ -77,8 +77,15 @@ for version in "${versions[@]}"; do
 		variantAliases=( "${versionAliases[@]/%/-$variant}" )
 		variantAliases=( "${variantAliases[@]//latest-/}" )
 
+		subVariant="${variant#*-}"
+		[ "$subVariant" != "$variant" ] || subVariant=
+
 		if [ "$variant" = "${latestVariant[$version]}" ]; then
 			variantAliases+=( "${versionAliases[@]}" )
+		elif [ "$subVariant" ] && [ "${variant%-$subVariant}" = "${latestVariant[$version]}" ]; then
+			subVariantAliases=( "${versionAliases[@]/%/-$subVariant}" )
+			subVariantAliases=( "${subVariantAliases[@]//latest-/}" )
+			variantAliases+=( "${subVariantAliases[@]}" )
 		fi
 
 		echo
