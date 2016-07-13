@@ -32,7 +32,7 @@ RUN set -ex \
 	done
 
 ENV TOMCAT_MAJOR 9
-ENV TOMCAT_VERSION 9.0.0.M8
+ENV TOMCAT_VERSION 9.0.0.M9
 ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
 
 RUN set -x \
