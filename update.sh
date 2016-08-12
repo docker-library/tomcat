@@ -20,7 +20,7 @@ for version in "${versions[@]}"; do
 		subVariant="${variant#$javaVariant-}"
 		[ "$subVariant" != "$variant" ] || subVariant=
 		
-		baseImage='java'
+		baseImage='openjdk'
 		case "$javaVariant" in
 			jre*|jdk*)
 				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jre" or ":7-jre-alpine"
