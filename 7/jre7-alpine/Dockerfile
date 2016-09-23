@@ -33,7 +33,11 @@ RUN set -ex \
 
 ENV TOMCAT_MAJOR 7
 ENV TOMCAT_VERSION 7.0.72
-ENV TOMCAT_TGZ_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
+
+# https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
+ENV TOMCAT_TGZ_URL https://www.apache.org/dyn/closer.cgi?action=download&filename=tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
+# not all the mirrors actually carry the .asc files :'(
+ENV TOMCAT_ASC_URL https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc
 
 RUN set -x \
 	\
@@ -42,7 +46,7 @@ RUN set -x \
 		tar \
 		openssl \
 	&& wget -O tomcat.tar.gz "$TOMCAT_TGZ_URL" \
-	&& wget -O tomcat.tar.gz.asc "$TOMCAT_TGZ_URL.asc" \
+	&& wget -O tomcat.tar.gz.asc "$TOMCAT_ASC_URL" \
 	&& gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz \
 	&& tar -xvf tomcat.tar.gz --strip-components=1 \
 	&& rm bin/*.bat \
