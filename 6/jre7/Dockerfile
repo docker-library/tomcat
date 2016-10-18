@@ -5,32 +5,43 @@ ENV PATH $CATALINA_HOME/bin:$PATH
 RUN mkdir -p "$CATALINA_HOME"
 WORKDIR $CATALINA_HOME
 
-# runtime dependency for Tomcat Native Libraries
-RUN apt-get update && apt-get install -y libapr1 && rm -rf /var/lib/apt/lists/*
+# let "Tomcat Native" live somewhere isolated
+ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
-RUN set -ex \
-	&& for key in \
-		05AB33110949707C93A279E3D3EFE6B686867BA6 \
-		07E48665A34DCAFAE522E5E6266191C37C037D42 \
-		47309207D818FFD8DCD3F83F1931D684307A10A5 \
-		541FBE7D8F78B25E055DDEE13C370389288584E7 \
-		61B832AC2F1C5A90F0F9B00A1C506407564C17A3 \
-		79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED \
-		80FF76D88A969FE46108558A80B953A041E49465 \
-		8B39757B1D8A994DF2433ED58B3A601F08C975E5 \
-		A27677289986DB50844682F8ACB77FC2E86E29AC \
-		A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 \
-		B3F49CD3B9BD2996DA90F817ED3873F5D3262722 \
-		DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 \
-		F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE \
-		F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23 \
-	; do \
+# runtime dependencies for Tomcat Native Libraries
+# Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
+# see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
+ENV OPENSSL_VERSION 1.0.2j-1
+RUN { \
+		echo 'deb http://httpredir.debian.org/debian unstable main'; \
+	} > /etc/apt/sources.list.d/unstable.list \
+	&& { \
+# add a negative "Pin-Priority" so that we never ever get packages from unstable unless we explicitly request them
+		echo 'Package: *'; \
+		echo 'Pin: release a=unstable'; \
+		echo 'Pin-Priority: -10'; \
+		echo; \
+# except OpenSSL, which is the reason we're here
+		echo 'Package: openssl libssl*'; \
+		echo "Pin: version $OPENSSL_VERSION"; \
+		echo 'Pin-Priority: 990'; \
+	} > /etc/apt/preferences.d/unstable-openssl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		libapr1 \
+		openssl="$OPENSSL_VERSION" \
+	&& rm -rf /var/lib/apt/lists/*
+
+# see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
+# see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
+ENV GPG_KEYS 05AB33110949707C93A279E3D3EFE6B686867BA6 07E48665A34DCAFAE522E5E6266191C37C037D42 47309207D818FFD8DCD3F83F1931D684307A10A5 541FBE7D8F78B25E055DDEE13C370389288584E7 61B832AC2F1C5A90F0F9B00A1C506407564C17A3 713DA88BE50911535FE716F5208B0AB1D63011C7 79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED 80FF76D88A969FE46108558A80B953A041E49465 8B39757B1D8A994DF2433ED58B3A601F08C975E5 A27677289986DB50844682F8ACB77FC2E86E29AC A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 B3F49CD3B9BD2996DA90F817ED3873F5D3262722 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
+RUN set -ex; \
+	for key in $GPG_KEYS; do \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
 
 ENV TOMCAT_MAJOR 6
-ENV TOMCAT_VERSION 6.0.45
+ENV TOMCAT_VERSION 6.0.47
 
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
 ENV TOMCAT_TGZ_URL https://www.apache.org/dyn/closer.cgi?action=download&filename=tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
@@ -58,11 +69,11 @@ RUN set -x \
 	&& apt-get update && apt-get install -y --no-install-recommends $nativeBuildDeps && rm -rf /var/lib/apt/lists/* \
 	&& ( \
 		export CATALINA_HOME="$PWD" \
-		&& cd "$nativeBuildDir/jni/native" \
+		&& cd "$nativeBuildDir/native" \
 		&& ./configure \
-			--libdir=/usr/lib/jni \
+			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
-			--with-apr=/usr/bin/apr-1-config \
+			--with-apr="$(which apr-1-config)" \
 			--with-java-home="$(docker-java-home)" \
 			--with-ssl=yes \
 		&& make -j$(nproc) \
