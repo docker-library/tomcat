@@ -13,13 +13,13 @@ travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%.*}"
 	fullVersion="$(curl -fsSL --compressed "https://www.apache.org/dist/tomcat/tomcat-$majorVersion/" | grep '<a href="v'"$version." | sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' | sort -V | tail -1)"
-	
+
 	for variant in "$version"/*/; do
 		variant="$(basename "$variant")"
 		javaVariant="${variant%%-*}"
 		subVariant="${variant#$javaVariant-}"
 		[ "$subVariant" != "$variant" ] || subVariant=
-		
+
 		baseImage='openjdk'
 		case "$javaVariant" in
 			jre*|jdk*)
@@ -30,7 +30,7 @@ for version in "${versions[@]}"; do
 				continue
 				;;
 		esac
-		
+
 		(
 			set -x
 			if [ "$majorVersion" != '6' ]; then
@@ -42,7 +42,7 @@ for version in "${versions[@]}"; do
 				s/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/;
 			' "$version/$variant/Dockerfile"
 		)
-		
+
 		travisEnv='\n  - '"VERSION=$version VARIANT=$variant$travisEnv"
 	done
 done
