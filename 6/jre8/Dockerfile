@@ -14,7 +14,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
 ENV OPENSSL_VERSION 1.0.2j-1
 RUN { \
-		echo 'deb http://httpredir.debian.org/debian unstable main'; \
+		echo 'deb http://deb.debian.org/debian unstable main'; \
 	} > /etc/apt/sources.list.d/unstable.list \
 	&& { \
 # add a negative "Pin-Priority" so that we never ever get packages from unstable unless we explicitly request them
