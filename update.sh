@@ -45,13 +45,15 @@ declare -A gpgKeys=(
 	# gpg: key 0D811BBE: public key "Yoav Shapira <yoavs@computer.org>" imported
 	# gpg: key 731FABEE: public key "Tim Whittington (CODE SIGNING KEY) <timw@apache.org>" imported
 	# gpg: key 0D498E23: public key "Mladen Turk (Default signing key) <mturk@apache.org>" imported
-	# gpg: Total number processed: 12
+	# gpg: key D63011C7: public key "Violeta Georgieva Georgieva (CODE SIGNING KEY) <violetagg@apache.org>" imported
+	# gpg: Total number processed: 13
 	[8]='
 		05AB33110949707C93A279E3D3EFE6B686867BA6
 		07E48665A34DCAFAE522E5E6266191C37C037D42
 		47309207D818FFD8DCD3F83F1931D684307A10A5
 		541FBE7D8F78B25E055DDEE13C370389288584E7
 		61B832AC2F1C5A90F0F9B00A1C506407564C17A3
+		713DA88BE50911535FE716F5208B0AB1D63011C7
 		79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED
 		9BA44C2621385CB966EBA586F72C284D731FABEE
 		A27677289986DB50844682F8ACB77FC2E86E29AC
