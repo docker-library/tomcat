@@ -12,7 +12,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # runtime dependencies for Tomcat Native Libraries
 # Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available (1.0.2g+)
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
-ENV OPENSSL_VERSION 1.0.2j-1
+ENV OPENSSL_VERSION placeholder
 RUN { \
 		echo 'deb http://deb.debian.org/debian stretch main'; \
 	} > /etc/apt/sources.list.d/stretch.list \

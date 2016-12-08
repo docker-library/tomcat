@@ -136,6 +136,9 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
+# see OPENSSL_VERSION in Dockerfile.template
+opensslVersionDebian="$(docker run -i --rm debian:stretch-slim bash -c 'apt-get update -qq && apt-cache show "$@"' -- 'openssl' |tac|tac| awk -F ': ' '$1 == "Version" { print $2; exit }')"
+
 travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%.*}"
@@ -171,9 +174,10 @@ for version in "${versions[@]}"; do
 				cp -v "Dockerfile${subVariant:+-$subVariant}.template" "$version/$variant/Dockerfile"
 			fi
 			sed -ri \
-				-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
-				-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
 				-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
+				-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
+				-e 's/^(ENV OPENSSL_VERSION) .*/\1 '"${opensslVersionDebian}"'/' \
+				-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
 				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
 				"$version/$variant/Dockerfile"
 		)
