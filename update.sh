@@ -170,9 +170,7 @@ for version in "${versions[@]}"; do
 
 		(
 			set -x
-			if [ "$majorVersion" != '6' ]; then
-				cp -v "Dockerfile${subVariant:+-$subVariant}.template" "$version/$variant/Dockerfile"
-			fi
+			cp -v "Dockerfile${subVariant:+-$subVariant}.template" "$version/$variant/Dockerfile"
 			sed -ri \
 				-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
 				-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
@@ -181,6 +179,51 @@ for version in "${versions[@]}"; do
 				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
 				"$version/$variant/Dockerfile"
 		)
+
+		# proper smoke test impossible on Tomcat 6 due to missing 'configtest' subcommand
+		if [ "$majorVersion" -eq 6 ]; then
+			readarray smokeTestBlock <<'EOD'
+
+			# verify mod_cluster is working properly
+			RUN set -e \
+				&& catalina.sh start \
+				&& while ! grep -q 'Server startup in' logs/catalina.out; do \
+					echo -n .; sleep .2; \
+				done; echo \
+				&& catalina.sh stop \
+				&& while pgrep java >/dev/null; do \
+					echo -n .; sleep .2; \
+				done; echo \
+				&& nativeLines="$(grep 'Apache Tomcat Native' logs/catalina.out)" \
+				&& nativeLines="$(echo "$nativeLines" | sort -u)" \
+				&& if ! echo "$nativeLines" | grep 'INFO: Loaded APR based Apache Tomcat Native library' >&2; then \
+					echo >&2 "$nativeLines"; \
+					exit 1; \
+				fi \
+				&& rm -rf conf/Catalina work/Catalina logs/*
+EOD
+		else
+			readarray smokeTestBlock <<'EOD'
+
+			# verify Tomcat Native is working properly
+			RUN set -e \
+				&& nativeLines="$(catalina.sh configtest 2>&1)" \
+				&& nativeLines="$(echo "$nativeLines" | grep 'Apache Tomcat Native')" \
+				&& nativeLines="$(echo "$nativeLines" | sort -u)" \
+				&& if ! echo "$nativeLines" | grep 'INFO: Loaded APR based Apache Tomcat Native library' >&2; then \
+					echo >&2 "$nativeLines"; \
+					exit 1; \
+				fi
+EOD
+		fi
+
+		printf %s "${smokeTestBlock[@]#			}" >> "$version/$variant/Dockerfile"
+
+		cat >> "$version/$variant/Dockerfile" <<-'EOD'
+
+			EXPOSE 8080
+			CMD ["catalina.sh", "run"]
+		EOD
 
 		travisEnv='\n  - '"VERSION=$version VARIANT=$variant$travisEnv"
 	done
