@@ -26,7 +26,7 @@ before_script:
   - image="tomcat:$VERSION-$VARIANT"
 
 script:
-  - docker build -t "$image" .
+  - travis_retry docker build -t "$image" .
   - ~/official-images/test/run.sh "$image"
 
 after_script:
