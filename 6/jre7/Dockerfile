@@ -44,7 +44,7 @@ RUN set -ex; \
 	done
 
 ENV TOMCAT_MAJOR 6
-ENV TOMCAT_VERSION 6.0.51
+ENV TOMCAT_VERSION 6.0.53
 
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
 ENV TOMCAT_TGZ_URL https://www.apache.org/dyn/closer.cgi?action=download&filename=tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
