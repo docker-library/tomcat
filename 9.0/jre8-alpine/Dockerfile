@@ -44,6 +44,7 @@ RUN set -x \
 	&& tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1 \
 	&& apk add --no-cache --virtual .native-build-deps \
 		apr-dev \
+		dpkg-dev dpkg \
 		gcc \
 		libc-dev \
 		make \
@@ -52,7 +53,9 @@ RUN set -x \
 	&& ( \
 		export CATALINA_HOME="$PWD" \
 		&& cd "$nativeBuildDir/native" \
+		&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 		&& ./configure \
+			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$(which apr-1-config)" \
