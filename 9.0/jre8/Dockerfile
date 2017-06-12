@@ -82,7 +82,7 @@ RUN set -x \
 			--with-apr="$(which apr-1-config)" \
 			--with-java-home="$(docker-java-home)" \
 			--with-ssl=yes \
-		&& make -j$(nproc) \
+		&& make -j "$(nproc)" \
 		&& make install \
 	) \
 	&& apt-get purge -y --auto-remove $nativeBuildDeps \

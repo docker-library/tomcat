@@ -44,6 +44,7 @@ RUN set -x \
 	&& tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1 \
 	&& apk add --no-cache --virtual .native-build-deps \
 		apr-dev \
+		coreutils \
 		dpkg-dev dpkg \
 		gcc \
 		libc-dev \
@@ -61,7 +62,7 @@ RUN set -x \
 			--with-apr="$(which apr-1-config)" \
 			--with-java-home="$(docker-java-home)" \
 			--with-ssl=yes \
-		&& make -j$(getconf _NPROCESSORS_ONLN) \
+		&& make -j "$(nproc)" \
 		&& make install \
 	) \
 	&& runDeps="$( \
