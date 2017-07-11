@@ -93,8 +93,23 @@ RUN set -x \
 	&& rm -rf "$nativeBuildDir" \
 	&& rm bin/tomcat-native.tar.gz
 
-# TODO find a simple hacky way to verify Tomcat Native is working properly
-# (the way we use in 7+ doesn't work here because we have no "configtest")
+# verify mod_cluster is working properly
+RUN set -e \
+	&& catalina.sh start \
+	&& while ! grep -q 'Server startup in' logs/catalina.out; do \
+		echo -n .; sleep .2; \
+	done; echo \
+	&& catalina.sh stop \
+	&& while pgrep java >/dev/null; do \
+		echo -n .; sleep .2; \
+	done; echo \
+	&& nativeLines="$(grep 'Apache Tomcat Native' logs/catalina.out)" \
+	&& nativeLines="$(echo "$nativeLines" | sort -u)" \
+	&& if ! echo "$nativeLines" | grep 'INFO: Loaded APR based Apache Tomcat Native library' >&2; then \
+		echo >&2 "$nativeLines"; \
+		exit 1; \
+	fi \
+	&& rm -rf conf/Catalina work/Catalina logs/*
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
