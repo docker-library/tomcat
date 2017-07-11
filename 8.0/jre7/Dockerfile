@@ -16,20 +16,24 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
 # and https://github.com/docker-library/tomcat/pull/31
 ENV OPENSSL_VERSION 1.1.0f-3
-RUN { \
-		echo 'deb http://deb.debian.org/debian stretch main'; \
-	} > /etc/apt/sources.list.d/stretch.list \
-	&& { \
+RUN set -ex; \
+	if ! grep -q stretch /etc/apt/sources.list; then \
+# only add stretch if we're not already building from within stretch
+		{ \
+			echo 'deb http://deb.debian.org/debian stretch main'; \
+		} > /etc/apt/sources.list.d/stretch.list; \
+		{ \
 # add a negative "Pin-Priority" so that we never ever get packages from stretch unless we explicitly request them
-		echo 'Package: *'; \
-		echo 'Pin: release n=stretch'; \
-		echo 'Pin-Priority: -10'; \
-		echo; \
-# except OpenSSL, which is the reason we're here
-		echo 'Package: openssl libssl*'; \
-		echo "Pin: version $OPENSSL_VERSION"; \
-		echo 'Pin-Priority: 990'; \
-	} > /etc/apt/preferences.d/stretch-openssl
+			echo 'Package: *'; \
+			echo 'Pin: release n=stretch'; \
+			echo 'Pin-Priority: -10'; \
+			echo; \
+# ... except OpenSSL, which is the reason we're here
+			echo 'Package: openssl libssl*'; \
+			echo "Pin: version $OPENSSL_VERSION"; \
+			echo 'Pin-Priority: 990'; \
+		} > /etc/apt/preferences.d/stretch-openssl; \
+	fi
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		libapr1 \
 		openssl="$OPENSSL_VERSION" \
