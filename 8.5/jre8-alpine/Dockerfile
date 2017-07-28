@@ -75,7 +75,11 @@ RUN set -x \
 	&& apk add --virtual .tomcat-native-rundeps $runDeps \
 	&& apk del .fetch-deps .native-build-deps \
 	&& rm -rf "$nativeBuildDir" \
-	&& rm bin/tomcat-native.tar.gz
+	&& rm bin/tomcat-native.tar.gz \
+# sh removes env vars it doesn't support (ones with periods)
+# https://github.com/docker-library/tomcat/issues/77
+	&& apk add --no-cache bash \
+	&& find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +
 
 # verify Tomcat Native is working properly
 RUN set -e \

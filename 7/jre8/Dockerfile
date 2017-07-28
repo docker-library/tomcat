@@ -91,7 +91,10 @@ RUN set -x \
 	) \
 	&& apt-get purge -y --auto-remove $nativeBuildDeps \
 	&& rm -rf "$nativeBuildDir" \
-	&& rm bin/tomcat-native.tar.gz
+	&& rm bin/tomcat-native.tar.gz \
+# sh removes env vars it doesn't support (ones with periods)
+# https://github.com/docker-library/tomcat/issues/77
+	&& find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +
 
 # verify Tomcat Native is working properly
 RUN set -e \
