@@ -2,7 +2,6 @@
 set -eu
 
 declare -A latestVariant=(
-	[6]='jre7'
 	[7]='jre7'
 	[8.0]='jre7'
 	[8.5]='jre8'
