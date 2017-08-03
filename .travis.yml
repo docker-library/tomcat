@@ -14,8 +14,6 @@ env:
   - VERSION=7 VARIANT=jre8
   - VERSION=7 VARIANT=jre7-alpine
   - VERSION=7 VARIANT=jre7
-  - VERSION=6 VARIANT=jre8
-  - VERSION=6 VARIANT=jre7
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
