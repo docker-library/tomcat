@@ -76,11 +76,10 @@ RUN set -x \
 		&& make install \
 	) \
 	&& runDeps="$( \
-		scanelf --needed --nobanner --recursive "$TOMCAT_NATIVE_LIBDIR" \
-			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+		scanelf --needed --nobanner --format '%n#p' --recursive "$TOMCAT_NATIVE_LIBDIR" \
+			| tr ',' '\n' \
 			| sort -u \
-			| xargs -r apk info --installed \
-			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --virtual .tomcat-native-rundeps $runDeps \
 	&& apk del .fetch-deps .native-build-deps \
