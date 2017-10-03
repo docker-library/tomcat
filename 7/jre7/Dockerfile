@@ -48,7 +48,7 @@ RUN set -ex; \
 	done
 
 ENV TOMCAT_MAJOR 7
-ENV TOMCAT_VERSION 7.0.81
+ENV TOMCAT_VERSION 7.0.82
 
 ENV TOMCAT_TGZ_URLS \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
