@@ -115,7 +115,7 @@ for version in "${versions[@]}"; do
 		exit 1
 	fi
 
-	fullVersion="$(curl -fsSL --compressed "https://www.apache.org/dist/tomcat/tomcat-$majorVersion/" | grep '<a href="v'"$version." | sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' | sort -V | tail -1)"
+	fullVersion="$(curl -fsSL --compressed "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/" | grep '<a href="v'"$version." | sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' | sort -V | tail -1)"
 
 	for variant in "$version"/*/; do
 		variant="$(basename "$variant")"
