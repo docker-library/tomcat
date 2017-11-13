@@ -15,17 +15,19 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # > configure: error: Your version of OpenSSL is not compatible with this version of tcnative
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
 # and https://github.com/docker-library/tomcat/pull/31
-ENV OPENSSL_VERSION 1.1.0f-3
+ENV OPENSSL_VERSION 1.1.0f-3+deb9u1
 RUN set -ex; \
 	if ! grep -q stretch /etc/apt/sources.list; then \
 # only add stretch if we're not already building from within stretch
 		{ \
 			echo 'deb http://deb.debian.org/debian stretch main'; \
+			echo 'deb http://security.debian.org stretch/updates main'; \
+			echo 'deb http://deb.debian.org/debian stretch-updates main'; \
 		} > /etc/apt/sources.list.d/stretch.list; \
 		{ \
 # add a negative "Pin-Priority" so that we never ever get packages from stretch unless we explicitly request them
 			echo 'Package: *'; \
-			echo 'Pin: release n=stretch'; \
+			echo 'Pin: release n=stretch*'; \
 			echo 'Pin-Priority: -10'; \
 			echo; \
 # ... except OpenSSL, which is the reason we're here
