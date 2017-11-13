@@ -21,11 +21,13 @@ RUN set -ex; \
 # only add stretch if we're not already building from within stretch
 		{ \
 			echo 'deb http://deb.debian.org/debian stretch main'; \
+			echo 'deb http://security.debian.org stretch/updates main'; \
+			echo 'deb http://deb.debian.org/debian stretch-updates main'; \
 		} > /etc/apt/sources.list.d/stretch.list; \
 		{ \
 # add a negative "Pin-Priority" so that we never ever get packages from stretch unless we explicitly request them
 			echo 'Package: *'; \
-			echo 'Pin: release n=stretch'; \
+			echo 'Pin: release n=stretch*'; \
 			echo 'Pin-Priority: -10'; \
 			echo; \
 # ... except OpenSSL, which is the reason we're here
