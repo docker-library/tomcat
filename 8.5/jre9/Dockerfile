@@ -1,4 +1,4 @@
-FROM openjdk:8-jre
+FROM openjdk:9-jre
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -55,9 +55,9 @@ RUN set -ex; \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
 
-ENV TOMCAT_MAJOR 7
-ENV TOMCAT_VERSION 7.0.82
-ENV TOMCAT_SHA1 4681bfbc86bb4da76a7aabbb3c545475eb9a8075
+ENV TOMCAT_MAJOR 8
+ENV TOMCAT_VERSION 8.5.24
+ENV TOMCAT_SHA1 9e26ba61c5665aafc849073edeb769be555283cd
 
 ENV TOMCAT_TGZ_URLS \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
