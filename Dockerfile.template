@@ -50,10 +50,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
 ENV GPG_KEYS placeholder
-RUN set -ex; \
-	for key in $GPG_KEYS; do \
-		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-	done
 
 ENV TOMCAT_MAJOR placeholder
 ENV TOMCAT_VERSION placeholder
@@ -75,6 +71,18 @@ ENV TOMCAT_ASC_URLS \
 	https://archive.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc
 
 RUN set -eux; \
+	\
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	\
+	apt-get install -y --no-install-recommends gnupg dirmngr; \
+	\
+	export GNUPGHOME="$(mktemp -d)"; \
+	for key in $GPG_KEYS; do \
+		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+	done; \
+	\
+	apt-get install -y --no-install-recommends wget ca-certificates; \
 	\
 	success=; \
 	for url in $TOMCAT_TGZ_URLS; do \
@@ -100,20 +108,18 @@ RUN set -eux; \
 	tar -xvf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
+	rm -rf "$GNUPGHOME"; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	nativeBuildDeps=" \
+	apt-get install -y --no-install-recommends \
 		dpkg-dev \
 		gcc \
 		libapr1-dev \
 		libssl-dev \
 		make \
-		openjdk-${JAVA_VERSION%%[.~bu-]*}-jdk=$JAVA_DEBIAN_VERSION \
-	"; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends $nativeBuildDeps; \
-	rm -rf /var/lib/apt/lists/*; \
+		"openjdk-${JAVA_VERSION%%[.~bu-]*}-jdk=$JAVA_DEBIAN_VERSION" \
+	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
@@ -128,9 +134,14 @@ RUN set -eux; \
 		make -j "$(nproc)"; \
 		make install; \
 	); \
-	apt-get purge -y --auto-remove $nativeBuildDeps; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
+	\
+# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77

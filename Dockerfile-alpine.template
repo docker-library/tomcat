@@ -9,15 +9,9 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-RUN apk add --no-cache gnupg
-
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
 ENV GPG_KEYS placeholder
-RUN set -ex; \
-	for key in $GPG_KEYS; do \
-		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-	done
 
 ENV TOMCAT_MAJOR placeholder
 ENV TOMCAT_VERSION placeholder
@@ -41,9 +35,16 @@ ENV TOMCAT_ASC_URLS \
 RUN set -eux; \
 	\
 	apk add --no-cache --virtual .fetch-deps \
+		gnupg \
+		\
 		ca-certificates \
 		openssl \
 	; \
+	\
+	export GNUPGHOME="$(mktemp -d)"; \
+	for key in $GPG_KEYS; do \
+		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+	done; \
 	\
 	success=; \
 	for url in $TOMCAT_TGZ_URLS; do \
@@ -69,6 +70,7 @@ RUN set -eux; \
 	tar -xvf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
+	rm -rf "$GNUPGHOME"; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
@@ -96,6 +98,9 @@ RUN set -eux; \
 		make -j "$(nproc)"; \
 		make install; \
 	); \
+	rm -rf "$nativeBuildDir"; \
+	rm bin/tomcat-native.tar.gz; \
+	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive "$TOMCAT_NATIVE_LIBDIR" \
 			| tr ',' '\n' \
@@ -104,8 +109,6 @@ RUN set -eux; \
 	)"; \
 	apk add --virtual .tomcat-native-rundeps $runDeps; \
 	apk del .fetch-deps .native-build-deps; \
-	rm -rf "$nativeBuildDir"; \
-	rm bin/tomcat-native.tar.gz; \
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
