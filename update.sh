@@ -128,6 +128,8 @@ for version in "${versions[@]}"; do
 			| cut -d' ' -f1
 	)"
 
+	echo "$version: $fullVersion ($sha1)"
+
 	for variant in "$version"/*/; do
 		variant="$(basename "$variant")"
 		javaVariant="${variant%%-*}"
@@ -138,6 +140,9 @@ for version in "${versions[@]}"; do
 		case "$javaVariant" in
 			jre*|jdk*)
 				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jre" or ":7-jre-alpine"
+				if [[ "$javaVariant" == *-slim ]]; then
+					baseImage+='-slim'
+				fi
 				;;
 			*)
 				echo >&2 "not sure what to do with $version/$variant re: baseImage; skipping"
@@ -145,18 +150,15 @@ for version in "${versions[@]}"; do
 				;;
 		esac
 
-		(
-			set -x
-			cp -v "Dockerfile${subVariant:+-$subVariant}.template" "$version/$variant/Dockerfile"
-			sed -ri \
-				-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
-				-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
-				-e 's/^(ENV OPENSSL_VERSION) .*/\1 '"${opensslVersionDebian}"'/' \
-				-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
-				-e 's/^(ENV TOMCAT_SHA1) .*/\1 '"$sha1"'/' \
-				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
-				"$version/$variant/Dockerfile"
-		)
+		sed -r \
+			-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
+			-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
+			-e 's/^(ENV OPENSSL_VERSION) .*/\1 '"${opensslVersionDebian}"'/' \
+			-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
+			-e 's/^(ENV TOMCAT_SHA1) .*/\1 '"$sha1"'/' \
+			-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
+			"Dockerfile${subVariant:+-$subVariant}.template" \
+			> "$version/$variant/Dockerfile"
 
 		travisEnv='\n  - '"VERSION=$version VARIANT=$variant$travisEnv"
 	done
