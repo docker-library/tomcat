@@ -43,7 +43,14 @@ RUN set -eux; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
-		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+        for server in $(shuf -e ha.pool.sks-keyservers.net \
+                                hkp://p80.pool.sks-keyservers.net:80 \
+                                keyserver.ubuntu.com \
+                                hkp://keyserver.ubuntu.com:80 \
+                                keyserver.pgp.com \
+                                pgp.mit.edu) ; do \
+            gpg --keyserver "$server" --recv-keys $key && break || : ; \
+        done; \
 	done; \
 	\
 	success=; \
