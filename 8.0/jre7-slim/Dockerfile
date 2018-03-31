@@ -15,7 +15,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # > configure: error: Your version of OpenSSL is not compatible with this version of tcnative
 # see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
 # and https://github.com/docker-library/tomcat/pull/31
-ENV OPENSSL_VERSION 1.1.0f-3+deb9u1
+ENV OPENSSL_VERSION 1.1.0f-3+deb9u2
 RUN set -ex; \
 	currentVersion="$(dpkg-query --show --showformat '${Version}\n' openssl)"; \
 	if dpkg --compare-versions "$currentVersion" '<<' "$OPENSSL_VERSION"; then \
