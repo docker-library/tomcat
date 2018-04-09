@@ -72,7 +72,7 @@ join() {
 }
 
 for version in "${versions[@]}"; do
-	for variant in jre{7,8,9}{,-{slim,alpine}}; do
+	for variant in jre{7,8,9,10}{,-{slim,alpine}}; do
 		[ -f "$version/$variant/Dockerfile" ] || continue
 
 		commit="$(dirCommit "$version/$variant")"
