@@ -53,7 +53,7 @@ ENV GPG_KEYS placeholder
 
 ENV TOMCAT_MAJOR placeholder
 ENV TOMCAT_VERSION placeholder
-ENV TOMCAT_SHA1 placeholder
+ENV TOMCAT_SHA512 placeholder
 
 ENV TOMCAT_TGZ_URLS \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
@@ -93,7 +93,7 @@ RUN set -eux; \
 	done; \
 	[ -n "$success" ]; \
 	\
-	echo "$TOMCAT_SHA1 *tomcat.tar.gz" | sha1sum -c -; \
+	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum -c -; \
 	\
 	success=; \
 	for url in $TOMCAT_ASC_URLS; do \

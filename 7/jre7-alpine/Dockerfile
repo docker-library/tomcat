@@ -15,7 +15,7 @@ ENV GPG_KEYS 05AB33110949707C93A279E3D3EFE6B686867BA6 07E48665A34DCAFAE522E5E626
 
 ENV TOMCAT_MAJOR 7
 ENV TOMCAT_VERSION 7.0.85
-ENV TOMCAT_SHA1 243a8be0bb445c412342965ee8fdf751d9c587e7
+ENV TOMCAT_SHA512 ed4f9d85fafe21570af7e01e712ebfb878066f9fab99d344935e20cf1f18c3389e103d33feb6937b5382408f3d356dbd8e7668bc82d2998412222bc099a1f8f7
 
 ENV TOMCAT_TGZ_URLS \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
@@ -55,7 +55,7 @@ RUN set -eux; \
 	done; \
 	[ -n "$success" ]; \
 	\
-	echo "$TOMCAT_SHA1 *tomcat.tar.gz" | sha1sum -c -; \
+	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum -c -; \
 	\
 	success=; \
 	for url in $TOMCAT_ASC_URLS; do \
