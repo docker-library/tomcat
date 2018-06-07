@@ -2,15 +2,11 @@ language: bash
 services: docker
 
 env:
-  - VERSION=9.0 VARIANT=jre9-slim
-  - VERSION=9.0 VARIANT=jre9
   - VERSION=9.0 VARIANT=jre8-slim
   - VERSION=9.0 VARIANT=jre8-alpine
   - VERSION=9.0 VARIANT=jre8
   - VERSION=9.0 VARIANT=jre10-slim
   - VERSION=9.0 VARIANT=jre10
-  - VERSION=8.5 VARIANT=jre9-slim
-  - VERSION=8.5 VARIANT=jre9
   - VERSION=8.5 VARIANT=jre8-slim
   - VERSION=8.5 VARIANT=jre8-alpine
   - VERSION=8.5 VARIANT=jre8
