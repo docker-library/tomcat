@@ -5,7 +5,7 @@ declare -A latestVariant=(
 	[7]='jre7'
 	[8.0]='jre7'
 	[8.5]='jre8'
-	[9.0]='jre9'
+	[9.0]='jre10'
 )
 declare -A aliases=(
 	[8.5]='8 latest'
