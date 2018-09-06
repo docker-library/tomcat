@@ -114,7 +114,12 @@ RUN set -eux; \
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
 	apk add --no-cache bash; \
-	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +
+	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
+	\
+# fix permissions (especially for running as non-root)
+# https://github.com/docker-library/tomcat/issues/35
+	chmod -R +rX .; \
+	chmod 777 logs work
 
 # verify Tomcat Native is working properly
 RUN set -e \
