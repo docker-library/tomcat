@@ -43,7 +43,13 @@ RUN set -eux; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
-		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+		for i in $(seq 1 4); do \
+			[ $i -lt 4 ] && set +e ; \
+			gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+			retval=$? ; \
+			set -e ; \
+			[ $retval = 0 ] && break ; \
+		done; \	
 	done; \
 	\
 	success=; \
