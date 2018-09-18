@@ -152,7 +152,7 @@ for version in "${versions[@]}"; do
 
 		sed -r \
 			-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
-			-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
+			-e 's/^(FROM) (PLACEHOLDER) (.*)$/\1 '"$baseImage"' \3/' \
 			-e 's/^(ENV OPENSSL_VERSION) .*/\1 '"${opensslVersionDebian}"'/' \
 			-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
 			-e 's/^(ENV TOMCAT_SHA512) .*/\1 '"$sha512"'/' \
