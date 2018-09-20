@@ -1,4 +1,4 @@
-FROM PLACEHOLDER
+FROM PLACEHOLDER AS common-packages
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -46,6 +46,8 @@ RUN set -ex; \
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		libapr1 \
 	&& rm -rf /var/lib/apt/lists/*
+
+FROM common-packages as builder
 
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
@@ -138,12 +140,6 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	rm -rf /var/lib/apt/lists/*; \
-	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
 	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
@@ -163,5 +159,9 @@ RUN set -e \
 		exit 1; \
 	fi
 
+
+
+FROM common-packages as runtime
+COPY --from=builder $CATALINA_HOME $CATALINA_HOME
 EXPOSE 8080
 CMD ["catalina.sh", "run"]

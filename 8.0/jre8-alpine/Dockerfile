@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:8-jre-alpine as common-packages
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -8,6 +8,17 @@ WORKDIR $CATALINA_HOME
 # let "Tomcat Native" live somewhere isolated
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
+RUN set -eux; \
+	\
+	apk add --no-cache --virtual .tomcat-rundeps \
+		ca-certificates \
+		openssl \
+		bash \
+		apr \
+		libuuid
+
+FROM common-packages as builder
 
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
@@ -36,9 +47,6 @@ RUN set -eux; \
 	\
 	apk add --no-cache --virtual .fetch-deps \
 		gnupg \
-		\
-		ca-certificates \
-		openssl \
 	; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
@@ -102,18 +110,8 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive "$TOMCAT_NATIVE_LIBDIR" \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --virtual .tomcat-native-rundeps $runDeps; \
-	apk del .fetch-deps .native-build-deps; \
-	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
-	apk add --no-cache bash; \
 	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
 	\
 # fix permissions (especially for running as non-root)
@@ -130,6 +128,9 @@ RUN set -e \
 		echo >&2 "$nativeLines"; \
 		exit 1; \
 	fi
+
+FROM common-packages as runtime
+COPY --from=builder $CATALINA_HOME $CATALINA_HOME
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
