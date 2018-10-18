@@ -1,5 +1,6 @@
 FROM openjdk:7-jdk-alpine
 
+ENV TIME_ZONE=Asia/Shanghai
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
 RUN mkdir -p "$CATALINA_HOME"
@@ -36,10 +37,12 @@ RUN set -eux; \
 	\
 	apk add --no-cache --virtual .fetch-deps \
 		gnupg \
-		\
+		tzdata \
 		ca-certificates \
 		openssl \
 	; \
+        echo "${TIME_ZONE}" > /etc/timezone ;\
+         ln -sf /usr/share/zoneinfo/${TIME_ZONE} /etc/localtime; \	
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
