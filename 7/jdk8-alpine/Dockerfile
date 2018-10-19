@@ -137,4 +137,4 @@ RUN set -e \
 	fi
 
 EXPOSE 8080
-CMD ["catalina.sh", "start"]
+CMD ["catalina.sh", "run"]
