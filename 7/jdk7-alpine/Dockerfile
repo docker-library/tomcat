@@ -39,7 +39,7 @@ RUN set -eux; \
 		gnupg \
 		tzdata \
 		ca-certificates \
-		openssl \
+		openssl busybox-extras\
 	; \
         echo "${TIME_ZONE}" > /etc/timezone ;\
          ln -sf /usr/share/zoneinfo/${TIME_ZONE} /etc/localtime; \	
