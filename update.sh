@@ -138,8 +138,8 @@ for version in "${versions[@]}"; do
 
 		baseImage='openjdk'
 		case "$javaVariant" in
-			jre*|jdk*)
-				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jre" or ":7-jre-alpine"
+			jdk*)
+				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jdk"
 				if [[ "$javaVariant" == *-slim ]]; then
 					baseImage+='-slim'
 				fi

@@ -17,6 +17,8 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # and https://github.com/docker-library/tomcat/pull/31
 ENV OPENSSL_VERSION placeholder
 RUN set -ex; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends openssl; \
 	currentVersion="$(dpkg-query --show --showformat '${Version}\n' openssl)"; \
 	if dpkg --compare-versions "$currentVersion" '<<' "$OPENSSL_VERSION"; then \
 		if ! grep -q stretch /etc/apt/sources.list; then \
@@ -119,7 +121,6 @@ RUN set -eux; \
 		libapr1-dev \
 		libssl-dev \
 		make \
-		"openjdk-${JAVA_VERSION%%[.~bu-]*}-jdk=$JAVA_DEBIAN_VERSION" \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
