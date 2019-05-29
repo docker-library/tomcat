@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:11-jdk-slim
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -8,6 +8,46 @@ WORKDIR $CATALINA_HOME
 # let "Tomcat Native" live somewhere isolated
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
+# runtime dependencies for Tomcat Native Libraries
+# Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available
+# > checking OpenSSL library version >= 1.0.2...
+# > configure: error: Your version of OpenSSL is not compatible with this version of tcnative
+# see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
+# and https://github.com/docker-library/tomcat/pull/31
+ENV OPENSSL_VERSION 1.1.0j-1~deb9u1
+RUN set -ex; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends openssl; \
+	currentVersion="$(dpkg-query --show --showformat '${Version}\n' openssl)"; \
+	if dpkg --compare-versions "$currentVersion" '<<' "$OPENSSL_VERSION"; then \
+		if ! grep -q stretch /etc/apt/sources.list; then \
+# only add stretch if we're not already building from within stretch
+			{ \
+				echo 'deb http://deb.debian.org/debian stretch main'; \
+				echo 'deb http://security.debian.org stretch/updates main'; \
+				echo 'deb http://deb.debian.org/debian stretch-updates main'; \
+			} > /etc/apt/sources.list.d/stretch.list; \
+			{ \
+# add a negative "Pin-Priority" so that we never ever get packages from stretch unless we explicitly request them
+				echo 'Package: *'; \
+				echo 'Pin: release n=stretch*'; \
+				echo 'Pin-Priority: -10'; \
+				echo; \
+# ... except OpenSSL, which is the reason we're here
+				echo 'Package: openssl libssl*'; \
+				echo "Pin: version $OPENSSL_VERSION"; \
+				echo 'Pin-Priority: 990'; \
+			} > /etc/apt/preferences.d/stretch-openssl; \
+		fi; \
+		apt-get update; \
+		apt-get install -y --no-install-recommends openssl="$OPENSSL_VERSION"; \
+		rm -rf /var/lib/apt/lists/*; \
+	fi
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		libapr1 \
+	&& rm -rf /var/lib/apt/lists/*
 
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
@@ -34,17 +74,17 @@ ENV TOMCAT_ASC_URLS \
 
 RUN set -eux; \
 	\
-	apk add --no-cache --virtual .fetch-deps \
-		gnupg \
-		\
-		ca-certificates \
-		openssl \
-	; \
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	\
+	apt-get install -y --no-install-recommends gnupg dirmngr; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
 		gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done; \
+	\
+	apt-get install -y --no-install-recommends wget ca-certificates; \
 	\
 	success=; \
 	for url in $TOMCAT_TGZ_URLS; do \
@@ -75,15 +115,12 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	apk add --no-cache --virtual .native-build-deps \
-		apr-dev \
-		coreutils \
-		dpkg-dev dpkg \
+	apt-get install -y --no-install-recommends \
+		dpkg-dev \
 		gcc \
-		libc-dev \
+		libapr1-dev \
+		libssl-dev \
 		make \
-		"openjdk${JAVA_VERSION%%[-~bu]*}"="$JAVA_ALPINE_VERSION" \
-		openssl-dev \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
@@ -102,18 +139,14 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive "$TOMCAT_NATIVE_LIBDIR" \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --virtual .tomcat-native-rundeps $runDeps; \
-	apk del .fetch-deps .native-build-deps; \
+# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
-	apk add --no-cache bash; \
 	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
 	\
 # fix permissions (especially for running as non-root)

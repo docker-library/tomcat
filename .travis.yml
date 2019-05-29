@@ -2,22 +2,16 @@ language: bash
 services: docker
 
 env:
-  - VERSION=9.0 VARIANT=jre8-slim
-  - VERSION=9.0 VARIANT=jre8-alpine
-  - VERSION=9.0 VARIANT=jre8
-  - VERSION=9.0 VARIANT=jre11-slim
-  - VERSION=9.0 VARIANT=jre11
-  - VERSION=8.5 VARIANT=jre8-slim
-  - VERSION=8.5 VARIANT=jre8-alpine
-  - VERSION=8.5 VARIANT=jre8
-  - VERSION=8.5 VARIANT=jre11-slim
-  - VERSION=8.5 VARIANT=jre11
-  - VERSION=7 VARIANT=jre8-slim
-  - VERSION=7 VARIANT=jre8-alpine
-  - VERSION=7 VARIANT=jre8
-  - VERSION=7 VARIANT=jre7-slim
-  - VERSION=7 VARIANT=jre7-alpine
-  - VERSION=7 VARIANT=jre7
+  - VERSION=9.0 VARIANT=jdk8-slim
+  - VERSION=9.0 VARIANT=jdk8
+  - VERSION=9.0 VARIANT=jdk11-slim
+  - VERSION=9.0 VARIANT=jdk11
+  - VERSION=8.5 VARIANT=jdk8-slim
+  - VERSION=8.5 VARIANT=jdk8
+  - VERSION=8.5 VARIANT=jdk11-slim
+  - VERSION=8.5 VARIANT=jdk11
+  - VERSION=7 VARIANT=jdk8-slim
+  - VERSION=7 VARIANT=jdk8
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
