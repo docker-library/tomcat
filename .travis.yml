@@ -2,16 +2,26 @@ language: bash
 services: docker
 
 env:
-  - VERSION=9.0 VARIANT=jdk8-slim
-  - VERSION=9.0 VARIANT=jdk8
-  - VERSION=9.0 VARIANT=jdk11-slim
-  - VERSION=9.0 VARIANT=jdk11
-  - VERSION=8.5 VARIANT=jdk8-slim
-  - VERSION=8.5 VARIANT=jdk8
-  - VERSION=8.5 VARIANT=jdk11-slim
-  - VERSION=8.5 VARIANT=jdk11
-  - VERSION=7 VARIANT=jdk8-slim
-  - VERSION=7 VARIANT=jdk8
+  - CONTEXT=9.0/jdk11/openjdk
+  - CONTEXT=9.0/jdk11/openjdk-slim
+  - CONTEXT=9.0/jdk11/adoptopenjdk-hotspot
+  - CONTEXT=9.0/jdk11/adoptopenjdk-openj9
+  - CONTEXT=9.0/jdk8/openjdk
+  - CONTEXT=9.0/jdk8/openjdk-slim
+  - CONTEXT=9.0/jdk8/adoptopenjdk-hotspot
+  - CONTEXT=9.0/jdk8/adoptopenjdk-openj9
+  - CONTEXT=8.5/jdk11/openjdk
+  - CONTEXT=8.5/jdk11/openjdk-slim
+  - CONTEXT=8.5/jdk11/adoptopenjdk-hotspot
+  - CONTEXT=8.5/jdk11/adoptopenjdk-openj9
+  - CONTEXT=8.5/jdk8/openjdk
+  - CONTEXT=8.5/jdk8/openjdk-slim
+  - CONTEXT=8.5/jdk8/adoptopenjdk-hotspot
+  - CONTEXT=8.5/jdk8/adoptopenjdk-openj9
+  - CONTEXT=7/jdk8/openjdk
+  - CONTEXT=7/jdk8/openjdk-slim
+  - CONTEXT=7/jdk8/adoptopenjdk-hotspot
+  - CONTEXT=7/jdk8/adoptopenjdk-openj9
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
@@ -19,8 +29,8 @@ install:
 before_script:
   - env | sort
   - wget -qO- 'https://github.com/tianon/pgp-happy-eyeballs/raw/master/hack-my-builds.sh' | bash
-  - cd "$VERSION/$VARIANT"
-  - image="tomcat:$VERSION-$VARIANT"
+  - cd "$CONTEXT"
+  - image="travis/tomcat:$(sed 's!/!-!g' <<<"$CONTEXT")"
 
 script:
   - |

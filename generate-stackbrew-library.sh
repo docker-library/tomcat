@@ -1,11 +1,12 @@
 #!/bin/bash
 set -eu
 
+defaultVendorVariant='openjdk'
 declare -A latestVariant=(
-	[7]='jdk8'
-	[8.0]='jdk8'
-	[8.5]='jdk8'
-	[9.0]='jdk11'
+	[7]="jdk8-$defaultVendorVariant"
+	[8.0]="jdk8-$defaultVendorVariant"
+	[8.5]="jdk8-$defaultVendorVariant"
+	[9.0]="jdk11-$defaultVendorVariant"
 )
 declare -A aliases=(
 	[8.5]='8 latest'
@@ -17,6 +18,9 @@ cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 versions=( */ )
 versions=( "${versions[@]%/}" )
+
+# sort version numbers with highest first
+IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
@@ -72,46 +76,54 @@ join() {
 }
 
 for version in "${versions[@]}"; do
-	for variant in jdk{8,11,12,13}{,-slim}; do
-		[ -f "$version/$variant/Dockerfile" ] || continue
+	for javaVariant in {jdk,jre}{11,8}; do
+		for vendorVariant in {openjdk{,-slim},adoptopenjdk-{hotspot,openj9}}; do
+			variant="$javaVariant-$vendorVariant"
+			dir="$version/$javaVariant/$vendorVariant"
+			[ -f "$dir/Dockerfile" ] || continue
 
-		commit="$(dirCommit "$version/$variant")"
+			commit="$(dirCommit "$dir")"
 
-		fullVersion="$(git show "$commit":"$version/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "TOMCAT_VERSION" { print $3; exit }')"
+			fullVersion="$(awk '$1 == "ENV" && $2 == "TOMCAT_VERSION" { print $3; exit }' "$dir/Dockerfile")"
+			[ -n "$fullVersion" ]
 
-		versionAliases=()
-		while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
-			versionAliases+=( $fullVersion )
-			fullVersion="${fullVersion%[.-]*}"
+			versionAliases=()
+			while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
+				versionAliases+=( $fullVersion )
+				fullVersion="${fullVersion%[.-]*}"
+			done
+			versionAliases+=(
+				$version
+				${aliases[$version]:-}
+			)
+
+			# "jdk8-openjdk-slim"
+			variantAliases=( "${versionAliases[@]/%/-$variant}" )
+			variantAliases=( "${variantAliases[@]//latest-/}" )
+
+			# "jdk8"
+			if [ "$vendorVariant" = "$defaultVendorVariant" ]; then
+				javaAliases=( "${versionAliases[@]/%/-$javaVariant}" )
+				javaAliases=( "${javaAliases[@]//latest-/}" )
+				variantAliases+=( "${javaAliases[@]}" )
+			fi
+
+			# "latest"
+			if [ "$variant" = "${latestVariant[$version]}" ]; then
+				variantAliases+=( "${versionAliases[@]}" )
+			fi
+
+			variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
+			[ -n "$variantParent" ]
+			variantArches="${parentRepoToArches[$variantParent]}"
+
+			echo
+			cat <<-EOE
+				Tags: $(join ', ' "${variantAliases[@]}")
+				Architectures: $(join ', ' $variantArches)
+				GitCommit: $commit
+				Directory: $dir
+			EOE
 		done
-		versionAliases+=(
-			$version
-			${aliases[$version]:-}
-		)
-
-		variantAliases=( "${versionAliases[@]/%/-$variant}" )
-		variantAliases=( "${variantAliases[@]//latest-/}" )
-
-		subVariant="${variant#*-}"
-		[ "$subVariant" != "$variant" ] || subVariant=
-
-		if [ "$variant" = "${latestVariant[$version]}" ]; then
-			variantAliases+=( "${versionAliases[@]}" )
-		elif [ "$subVariant" ] && [ "${variant%-$subVariant}" = "${latestVariant[$version]}" ]; then
-			subVariantAliases=( "${versionAliases[@]/%/-$subVariant}" )
-			subVariantAliases=( "${subVariantAliases[@]//latest-/}" )
-			variantAliases+=( "${subVariantAliases[@]}" )
-		fi
-
-		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$version/$variant/Dockerfile")"
-		variantArches="${parentRepoToArches[$variantParent]}"
-
-		echo
-		cat <<-EOE
-			Tags: $(join ', ' "${variantAliases[@]}")
-			Architectures: $(join ', ' $variantArches)
-			GitCommit: $commit
-			Directory: $version/$variant
-		EOE
 	done
 done
