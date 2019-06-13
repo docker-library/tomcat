@@ -1,5 +1,6 @@
-#!/bin/bash
-set -eo pipefail
+#!/usr/bin/env bash
+set -Eeuo pipefail
+shopt -s nullglob
 
 # docker run -it --rm buildpack-deps:curl
 # curl -fsSL 'https://www.apache.org/dist/tomcat/tomcat-8/KEYS' | gpg --import
@@ -102,9 +103,6 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
-# see OPENSSL_VERSION in Dockerfile.template
-opensslVersionDebian="$(docker run -i --rm debian:stretch-slim bash -c 'apt-get update -qq && apt-cache show "$@"' -- 'openssl' |tac|tac| awk -F ': ' '$1 == "Version" { print $2; exit }')"
-
 travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%.*}"
@@ -130,39 +128,52 @@ for version in "${versions[@]}"; do
 
 	echo "$version: $fullVersion ($sha512)"
 
-	for variant in "$version"/*/; do
-		variant="$(basename "$variant")"
-		javaVariant="${variant%%-*}"
-		subVariant="${variant#$javaVariant-}"
-		[ "$subVariant" != "$variant" ] || subVariant=
+	for javaDir in "$version"/{jre,jdk}{8,11}/; do
+		javaDir="${javaDir%/}"
+		javaVariant="$(basename "$javaDir")"
+		javaVersion="${javaVariant#jdk}"
+		javaVersion="${javaVersion#jre}" # "11", "8"
+		javaVariant="${javaVariant%$javaVersion}" # "jdk", "jre"
+		for vendorDir in "$javaDir"/{adoptopenjdk-{openj9,hotspot},openjdk{-slim,}}/; do
+			vendorDir="${vendorDir%/}"
+			vendor="$(basename "$vendorDir")"
+			[ -d "$vendorDir" ] || continue
 
-		baseImage='openjdk'
-		case "$javaVariant" in
-			jdk*)
-				baseImage+=":${javaVariant:3}-${javaVariant:0:3}${subVariant:+-$subVariant}" # ":7-jdk"
-				if [[ "$javaVariant" == *-slim ]]; then
-					baseImage+='-slim'
-				fi
-				;;
-			*)
-				echo >&2 "not sure what to do with $version/$variant re: baseImage; skipping"
-				continue
-				;;
-		esac
+			baseImage=
+			case "$vendor" in
+				openjdk | openjdk-slim)
+					baseImage="openjdk:$javaVersion-$javaVariant"
+					if [ "$vendor" = 'openjdk-slim' ]; then
+						baseImage+='-slim'
+					fi
+					;;
 
-		sed -r \
-			-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
-			-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
-			-e 's/^(ENV OPENSSL_VERSION) .*/\1 '"${opensslVersionDebian}"'/' \
-			-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
-			-e 's/^(ENV TOMCAT_SHA512) .*/\1 '"$sha512"'/' \
-			-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
-			"Dockerfile${subVariant:+-$subVariant}.template" \
-			> "$version/$variant/Dockerfile"
+				adoptopenjdk-hotspot | adoptopenjdk-openj9)
+					adoptVariant="${vendor#adoptopenjdk-}"
+					baseImage="adoptopenjdk:$javaVersion-$javaVariant-$adoptVariant"
+					;;
+			esac
 
-		travisEnv='\n  - '"VERSION=$version VARIANT=$variant$travisEnv"
+			if [ -z "$baseImage" ]; then
+				echo >&2 "error: cannot determine base image for '$vendorDir'"
+				exit 1
+			fi
+
+			echo "  - $vendorDir: $baseImage"
+
+			sed -r \
+				-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
+				-e 's/^(FROM) .*/\1 '"$baseImage"'/' \
+				-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
+				-e 's/^(ENV TOMCAT_SHA512) .*/\1 '"$sha512"'/' \
+				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
+				Dockerfile.template \
+				> "$vendorDir/Dockerfile"
+
+			travisEnv='\n  - '"CONTEXT=$vendorDir$travisEnv"
+		done
 	done
 done
 
-travis="$(awk -v 'RS=\n\n' '$1 == "env:" { $0 = "env:'"$travisEnv"'" } { printf "%s%s", $0, RS }' .travis.yml)"
-echo "$travis" > .travis.yml
+travis="$(awk -v 'RS=\n\n' -v travisEnv="$travisEnv" '$1 == "env:" { $0 = "env:" travisEnv } { printf "%s%s", $0, RS }' .travis.yml)"
+cat <<<"$travis" > .travis.yml

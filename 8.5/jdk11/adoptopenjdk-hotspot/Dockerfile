@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM adoptopenjdk:11-jdk-hotspot
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -9,53 +9,13 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# runtime dependencies for Tomcat Native Libraries
-# Tomcat Native 1.2+ requires a newer version of OpenSSL than debian:jessie has available
-# > checking OpenSSL library version >= 1.0.2...
-# > configure: error: Your version of OpenSSL is not compatible with this version of tcnative
-# see http://tomcat.10.x6.nabble.com/VOTE-Release-Apache-Tomcat-8-0-32-tp5046007p5046024.html (and following discussion)
-# and https://github.com/docker-library/tomcat/pull/31
-ENV OPENSSL_VERSION 1.1.0j-1~deb9u1
-RUN set -ex; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends openssl; \
-	currentVersion="$(dpkg-query --show --showformat '${Version}\n' openssl)"; \
-	if dpkg --compare-versions "$currentVersion" '<<' "$OPENSSL_VERSION"; then \
-		if ! grep -q stretch /etc/apt/sources.list; then \
-# only add stretch if we're not already building from within stretch
-			{ \
-				echo 'deb http://deb.debian.org/debian stretch main'; \
-				echo 'deb http://security.debian.org stretch/updates main'; \
-				echo 'deb http://deb.debian.org/debian stretch-updates main'; \
-			} > /etc/apt/sources.list.d/stretch.list; \
-			{ \
-# add a negative "Pin-Priority" so that we never ever get packages from stretch unless we explicitly request them
-				echo 'Package: *'; \
-				echo 'Pin: release n=stretch*'; \
-				echo 'Pin-Priority: -10'; \
-				echo; \
-# ... except OpenSSL, which is the reason we're here
-				echo 'Package: openssl libssl*'; \
-				echo "Pin: version $OPENSSL_VERSION"; \
-				echo 'Pin-Priority: 990'; \
-			} > /etc/apt/preferences.d/stretch-openssl; \
-		fi; \
-		apt-get update; \
-		apt-get install -y --no-install-recommends openssl="$OPENSSL_VERSION"; \
-		rm -rf /var/lib/apt/lists/*; \
-	fi
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		libapr1 \
-	&& rm -rf /var/lib/apt/lists/*
-
 # see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
 # see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
 ENV GPG_KEYS 05AB33110949707C93A279E3D3EFE6B686867BA6 07E48665A34DCAFAE522E5E6266191C37C037D42 47309207D818FFD8DCD3F83F1931D684307A10A5 541FBE7D8F78B25E055DDEE13C370389288584E7 61B832AC2F1C5A90F0F9B00A1C506407564C17A3 713DA88BE50911535FE716F5208B0AB1D63011C7 79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED 9BA44C2621385CB966EBA586F72C284D731FABEE A27677289986DB50844682F8ACB77FC2E86E29AC A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 
-ENV TOMCAT_MAJOR 7
-ENV TOMCAT_VERSION 7.0.94
-ENV TOMCAT_SHA512 b16f4b08591199e15f953c34965389a80d5597c28626a51c71ce42695ddd3359dc4df7f333ef0e1a1e8f9b2b6245041d57607c46764f33e560246c119cdc0f7a
+ENV TOMCAT_MAJOR 8
+ENV TOMCAT_VERSION 8.5.42
+ENV TOMCAT_SHA512 3e6b38e48d315d142e96f8e3809c86632f3c3903f8751c6602581a587edf840893ff0c737a65fcf9560a495b0118b5b8d60d4d1ce7947fe2abe34a89839b640f
 
 ENV TOMCAT_TGZ_URLS \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
@@ -95,7 +55,7 @@ RUN set -eux; \
 	done; \
 	[ -n "$success" ]; \
 	\
-	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum -c -; \
+	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
 	\
 	success=; \
 	for url in $TOMCAT_ASC_URLS; do \
@@ -126,12 +86,13 @@ RUN set -eux; \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
 		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+		aprConfig="$(which apr-1-config)"; \
 		./configure \
 			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
-			--with-apr="$(which apr-1-config)" \
-			--with-java-home="$(docker-java-home)" \
+			--with-apr="$aprConfig" \
+			--with-java-home="$JAVA_HOME" \
 			--with-ssl=yes; \
 		make -j "$(nproc)"; \
 		make install; \
@@ -141,7 +102,15 @@ RUN set -eux; \
 	\
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
+	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
+		| awk '/=>/ { print $(NF-1) }' \
+		| sort -u \
+		| xargs -r dpkg-query --search \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -r apt-mark manual \
+	; \
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
