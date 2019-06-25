@@ -134,14 +134,17 @@ for version in "${versions[@]}"; do
 		javaVersion="${javaVariant#jdk}"
 		javaVersion="${javaVersion#jre}" # "11", "8"
 		javaVariant="${javaVariant%$javaVersion}" # "jdk", "jre"
-		for vendorDir in "$javaDir"/{adoptopenjdk-{openj9,hotspot},openjdk{-slim,}}/; do
+		# all variants in reverse alphabetical order followed by OpenJDK
+		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,}}/; do
 			vendorDir="${vendorDir%/}"
 			vendor="$(basename "$vendorDir")"
 			[ -d "$vendorDir" ] || continue
 
+			template=
 			baseImage=
 			case "$vendor" in
 				openjdk | openjdk-slim)
+					template='apt'
 					baseImage="openjdk:$javaVersion-$javaVariant"
 					if [ "$vendor" = 'openjdk-slim' ]; then
 						baseImage+='-slim'
@@ -149,17 +152,27 @@ for version in "${versions[@]}"; do
 					;;
 
 				adoptopenjdk-hotspot | adoptopenjdk-openj9)
+					template='apt'
 					adoptVariant="${vendor#adoptopenjdk-}"
 					baseImage="adoptopenjdk:$javaVersion-$javaVariant-$adoptVariant"
 					;;
+
+				corretto)
+					template='yum'
+					baseImage="amazoncorretto:$javaVersion"
+					;;
 			esac
 
+			if [ -z "$template" ]; then
+				echo >&2 "error: cannot determine template for '$vendorDir'"
+				exit 1
+			fi
 			if [ -z "$baseImage" ]; then
 				echo >&2 "error: cannot determine base image for '$vendorDir'"
 				exit 1
 			fi
 
-			echo "  - $vendorDir: $baseImage"
+			echo "  - $vendorDir: $baseImage ($template)"
 
 			sed -r \
 				-e 's/^(ENV TOMCAT_VERSION) .*/\1 '"$fullVersion"'/' \
@@ -167,7 +180,7 @@ for version in "${versions[@]}"; do
 				-e 's/^(ENV TOMCAT_MAJOR) .*/\1 '"$majorVersion"'/' \
 				-e 's/^(ENV TOMCAT_SHA512) .*/\1 '"$sha512"'/' \
 				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
-				Dockerfile.template \
+				"Dockerfile-$template.template" \
 				> "$vendorDir/Dockerfile"
 
 			travisEnv='\n  - '"CONTEXT=$vendorDir$travisEnv"
