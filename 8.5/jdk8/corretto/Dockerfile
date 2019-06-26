@@ -59,29 +59,58 @@ RUN set -eux; \
 	done; \
 	[ -n "$success" ]; \
 	\
-# TODO should we leave these installed, or remove them too?
-	yum install -y gzip tar; \
+# http://yum.baseurl.org/wiki/YumDB.html
+	_yumdb_update_reason() { ( set -eu +x; \
+		local reason="$1"; shift; \
+		local pkg q; \
+		for pkg; do \
+			if q="$(rpm --query --queryformat '%{HDRID}-%{NVR}-%{ARCH}\n' "$pkg" 2>/dev/null)" && [ -n "$q" ]; then \
+				local l="${pkg%${pkg#?}}"; \
+				local dir="/var/lib/yum/yumdb/$l/$q"; \
+				if ! [ -d "$dir" ]; then \
+					echo "note: creating $dir"; \
+					mkdir -p "$dir"; \
+				fi; \
+				rm -f "$dir/reason"; \
+				echo "note: updating $dir/reason to $reason"; \
+				echo -n "$reason" > "$dir/reason"; \
+			else \
+				echo >&2 "error: $pkg does not seem to be installed?"; \
+				return 1; \
+			fi; \
+		done; \
+	) }; \
+# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
+	_yum_install_temporary() { ( set -eu +x; \
+		local pkg todo=''; \
+		for pkg; do \
+			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
+				todo="$todo $pkg"; \
+			fi; \
+		done; \
+		if [ -n "$todo" ]; then \
+			set -x; \
+			yum install -y $todo; \
+			_yumdb_update_reason 'dep' $todo; \
+		fi; \
+	) }; \
+	\
+	_yum_install_temporary gzip tar; \
 	\
 	gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz; \
-	tar -xvf tomcat.tar.gz --strip-components=1; \
+	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
 	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
-	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	nativeBuildDeps=' \
-		apr-devel \
-		gcc \
-		make \
-		openssl-devel \
-	'; \
-	yum install -y $nativeBuildDeps; \
+	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
+	_yum_install_temporary apr-devel gcc make openssl-devel; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-		aprConfig="$(type -p apr-1-config)"; \
+		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
@@ -94,17 +123,18 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
-		| sort -u \
-		| xargs -r rpm -q --queryformat '%{NAME}-%{VERSION}-%{RELEASE}-%{ARCH}\n' --whatprovides \
-		| sort -u \
-# http://yum.baseurl.org/wiki/YumDB.html (updating "reason" to "user" for tomcat-native build dependencies)
-# TODO find a better/cleaner way to generically interact with the yumdb for the purposes of marking things as automatically/manually installed
-		| xargs -r -n1 bash -Eeuo pipefail -c 'yumdbDir=( "/var/lib/yum/yumdb/${1:0:1}/"*"-$1" ); if [ -d "$yumdbDir" ]; then echo "note: updating $yumdbDir/reason"; echo -n user > "$yumdbDir/reason"; else echo >&2 "warning: $yumdbDir does not exist (ignoring)"; fi' -- \
-	; \
-# TODO handle "$nativeBuildDeps" in a similarly generic way?
-	yum autoremove -y $nativeBuildDeps; \
+# mark any explicit dependencies as manually installed
+	deps="$( \
+		find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
+			| awk '/=>/ { print $(NF-1) }' \
+			| sort -u \
+			| xargs -r rpm --query --whatprovides \
+			| sort -u \
+	)"; \
+	[ -z "$deps" ] || _yumdb_update_reason 'user' $deps; \
+	\
+# clean up anything added temporarily and not later marked as necessary
+	yum autoremove -y; \
 	yum clean all; \
 	rm -rf /var/cache/yum; \
 	\
