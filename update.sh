@@ -128,14 +128,14 @@ for version in "${versions[@]}"; do
 
 	echo "$version: $fullVersion ($sha512)"
 
-	for javaDir in "$version"/{jre,jdk}{8,11}/; do
+	for javaDir in "$version"/{jre,jdk}{8,11,12,13}/; do
 		javaDir="${javaDir%/}"
 		javaVariant="$(basename "$javaDir")"
 		javaVersion="${javaVariant#jdk}"
 		javaVersion="${javaVersion#jre}" # "11", "8"
 		javaVariant="${javaVariant%$javaVersion}" # "jdk", "jre"
 		# all variants in reverse alphabetical order followed by OpenJDK
-		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,}}/; do
+		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,-oracle,}}/; do
 			vendorDir="${vendorDir%/}"
 			vendor="$(basename "$vendorDir")"
 			[ -d "$vendorDir" ] || continue
@@ -149,6 +149,10 @@ for version in "${versions[@]}"; do
 					if [ "$vendor" = 'openjdk-slim' ]; then
 						baseImage+='-slim'
 					fi
+					;;
+				openjdk-oracle)
+					template='yum'
+					baseImage="openjdk:$javaVersion-$javaVariant-oracle"
 					;;
 
 				adoptopenjdk-hotspot | adoptopenjdk-openj9)

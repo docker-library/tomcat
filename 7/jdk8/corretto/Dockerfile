@@ -60,26 +60,14 @@ RUN set -eux; \
 	[ -n "$success" ]; \
 	\
 # http://yum.baseurl.org/wiki/YumDB.html
-	_yumdb_update_reason() { ( set -eu +x; \
-		local reason="$1"; shift; \
-		local pkg q; \
-		for pkg; do \
-			if q="$(rpm --query --queryformat '%{HDRID}-%{NVR}-%{ARCH}\n' "$pkg" 2>/dev/null)" && [ -n "$q" ]; then \
-				local l="${pkg%${pkg#?}}"; \
-				local dir="/var/lib/yum/yumdb/$l/$q"; \
-				if ! [ -d "$dir" ]; then \
-					echo "note: creating $dir"; \
-					mkdir -p "$dir"; \
-				fi; \
-				rm -f "$dir/reason"; \
-				echo "note: updating $dir/reason to $reason"; \
-				echo -n "$reason" > "$dir/reason"; \
-			else \
-				echo >&2 "error: $pkg does not seem to be installed?"; \
-				return 1; \
-			fi; \
-		done; \
-	) }; \
+	if ! command -v yumdb > /dev/null; then \
+		yum install -y yum-utils; \
+		yumdb set reason dep yum-utils; \
+	fi; \
+	if [ -f /etc/oracle-release ]; then \
+# TODO there's an odd bug on Oracle Linux where installing "cpp" (which gets pulled in as a dependency of "gcc") and then marking it as automatically-installed will result in the "filesystem" package being removed during "yum autoremove" (which then fails), so we set it as manually-installed to compensate
+		yumdb set reason user filesystem; \
+	fi; \
 # a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
 	_yum_install_temporary() { ( set -eu +x; \
 		local pkg todo=''; \
@@ -91,7 +79,7 @@ RUN set -eux; \
 		if [ -n "$todo" ]; then \
 			set -x; \
 			yum install -y $todo; \
-			_yumdb_update_reason 'dep' $todo; \
+			yumdb set reason dep $todo; \
 		fi; \
 	) }; \
 	\
@@ -126,12 +114,12 @@ RUN set -eux; \
 # mark any explicit dependencies as manually installed
 	deps="$( \
 		find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-			| awk '/=>/ { print $(NF-1) }' \
+			| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
 			| sort -u \
 			| xargs -r rpm --query --whatprovides \
 			| sort -u \
 	)"; \
-	[ -z "$deps" ] || _yumdb_update_reason 'user' $deps; \
+	[ -z "$deps" ] || yumdb set reason user $deps; \
 	\
 # clean up anything added temporarily and not later marked as necessary
 	yum autoremove -y; \
