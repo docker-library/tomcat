@@ -125,6 +125,8 @@ for version in "${versions[@]}"; do
 				GitCommit: $commit
 				Directory: $dir
 			EOE
+			constraints="$(bashbrew cat --format '{{ .TagEntry.Constraints | join ", " }}' "https://github.com/docker-library/official-images/raw/master/library/$variantParent")"
+			[ -z "$constraints" ] || echo "Constraints: $constraints"
 		done
 	done
 done
