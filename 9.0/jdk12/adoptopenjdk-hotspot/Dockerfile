@@ -1,4 +1,4 @@
-FROM amazoncorretto:8
+FROM adoptopenjdk:12-jdk-hotspot
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -34,14 +34,21 @@ ENV TOMCAT_ASC_URLS \
 
 RUN set -eux; \
 	\
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	\
+	apt-get install -y --no-install-recommends gnupg dirmngr; \
+	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
 		gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done; \
 	\
+	apt-get install -y --no-install-recommends wget ca-certificates; \
+	\
 	success=; \
 	for url in $TOMCAT_TGZ_URLS; do \
-		if curl -fL -o tomcat.tar.gz "$url"; then \
+		if wget -O tomcat.tar.gz "$url"; then \
 			success=1; \
 			break; \
 		fi; \
@@ -52,54 +59,36 @@ RUN set -eux; \
 	\
 	success=; \
 	for url in $TOMCAT_ASC_URLS; do \
-		if curl -fL -o tomcat.tar.gz.asc "$url"; then \
+		if wget -O tomcat.tar.gz.asc "$url"; then \
 			success=1; \
 			break; \
 		fi; \
 	done; \
 	[ -n "$success" ]; \
 	\
-# http://yum.baseurl.org/wiki/YumDB.html
-	if ! command -v yumdb > /dev/null; then \
-		yum install -y yum-utils; \
-		yumdb set reason dep yum-utils; \
-	fi; \
-	if [ -f /etc/oracle-release ]; then \
-# TODO there's an odd bug on Oracle Linux where installing "cpp" (which gets pulled in as a dependency of "gcc") and then marking it as automatically-installed will result in the "filesystem" package being removed during "yum autoremove" (which then fails), so we set it as manually-installed to compensate
-		yumdb set reason user filesystem; \
-	fi; \
-# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
-	_yum_install_temporary() { ( set -eu +x; \
-		local pkg todo=''; \
-		for pkg; do \
-			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
-				todo="$todo $pkg"; \
-			fi; \
-		done; \
-		if [ -n "$todo" ]; then \
-			set -x; \
-			yum install -y $todo; \
-			yumdb set reason dep $todo; \
-		fi; \
-	) }; \
-	\
-	_yum_install_temporary gzip tar; \
-	\
 	gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz; \
-	tar -xf tomcat.tar.gz --strip-components=1; \
+	tar -xvf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
 	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
-	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	_yum_install_temporary apr-devel gcc make openssl-devel; \
+	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
+	apt-get install -y --no-install-recommends \
+		dpkg-dev \
+		gcc \
+		libapr1-dev \
+		libssl-dev \
+		make \
+	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-		aprConfig="$(command -v apr-1-config)"; \
+		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+		aprConfig="$(which apr-1-config)"; \
 		./configure \
+			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -111,20 +100,19 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-# mark any explicit dependencies as manually installed
-	deps="$( \
-		find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-			| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
-			| sort -u \
-			| xargs -r rpm --query --whatprovides \
-			| sort -u \
-	)"; \
-	[ -z "$deps" ] || yumdb set reason user $deps; \
-	\
-# clean up anything added temporarily and not later marked as necessary
-	yum autoremove -y; \
-	yum clean all; \
-	rm -rf /var/cache/yum; \
+# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
+	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
+		| awk '/=>/ { print $(NF-1) }' \
+		| sort -u \
+		| xargs -r dpkg-query --search \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -r apt-mark manual \
+	; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77

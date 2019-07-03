@@ -2,6 +2,10 @@ language: bash
 services: docker
 
 env:
+  - CONTEXT=9.0/jdk13/openjdk-oracle
+  - CONTEXT=9.0/jdk12/openjdk-oracle
+  - CONTEXT=9.0/jdk12/adoptopenjdk-hotspot
+  - CONTEXT=9.0/jdk12/adoptopenjdk-openj9
   - CONTEXT=9.0/jdk11/openjdk
   - CONTEXT=9.0/jdk11/openjdk-slim
   - CONTEXT=9.0/jdk11/adoptopenjdk-hotspot
@@ -12,6 +16,10 @@ env:
   - CONTEXT=9.0/jdk8/adoptopenjdk-hotspot
   - CONTEXT=9.0/jdk8/adoptopenjdk-openj9
   - CONTEXT=9.0/jdk8/corretto
+  - CONTEXT=8.5/jdk13/openjdk-oracle
+  - CONTEXT=8.5/jdk12/openjdk-oracle
+  - CONTEXT=8.5/jdk12/adoptopenjdk-hotspot
+  - CONTEXT=8.5/jdk12/adoptopenjdk-openj9
   - CONTEXT=8.5/jdk11/openjdk
   - CONTEXT=8.5/jdk11/openjdk-slim
   - CONTEXT=8.5/jdk11/adoptopenjdk-hotspot

@@ -1,4 +1,4 @@
-FROM amazoncorretto:8
+FROM openjdk:12-jdk-oracle
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
