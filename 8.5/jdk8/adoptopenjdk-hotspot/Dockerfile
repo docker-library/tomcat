@@ -17,64 +17,52 @@ ENV TOMCAT_MAJOR 8
 ENV TOMCAT_VERSION 8.5.42
 ENV TOMCAT_SHA512 3e6b38e48d315d142e96f8e3809c86632f3c3903f8751c6602581a587edf840893ff0c737a65fcf9560a495b0118b5b8d60d4d1ce7947fe2abe34a89839b640f
 
-ENV TOMCAT_TGZ_URLS \
-# https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
-	https://www.apache.org/dyn/closer.cgi?action=download&filename=tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz \
-# if the version is outdated, we might have to pull from the dist/archive :/
-	https://www-us.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz \
-	https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz \
-	https://archive.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
-
-ENV TOMCAT_ASC_URLS \
-	https://www.apache.org/dyn/closer.cgi?action=download&filename=tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc \
-# not all the mirrors actually carry the .asc files :'(
-	https://www-us.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc \
-	https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc \
-	https://archive.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc
-
 RUN set -eux; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		gnupg dirmngr \
+		wget ca-certificates \
+	; \
 	\
-	apt-get install -y --no-install-recommends gnupg dirmngr; \
+	ddist() { \
+		local f="$1"; shift; \
+		local distFile="$1"; shift; \
+		local success=; \
+		local distUrl=; \
+		for distUrl in \
+# https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
+			'https://www.apache.org/dyn/closer.cgi?action=download&filename=' \
+# if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+			https://www-us.apache.org/dist/ \
+			https://www.apache.org/dist/ \
+			https://archive.apache.org/dist/ \
+		; do \
+			if wget -O "$f" "$distUrl$distFile" && [ -s "$f" ]; then \
+				success=1; \
+				break; \
+			fi; \
+		done; \
+		[ -n "$success" ]; \
+	}; \
 	\
+	ddist 'tomcat.tar.gz' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz"; \
+	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
+	ddist 'tomcat.tar.gz.asc' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc"; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
 		gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done; \
-	\
-	apt-get install -y --no-install-recommends wget ca-certificates; \
-	\
-	success=; \
-	for url in $TOMCAT_TGZ_URLS; do \
-		if wget -O tomcat.tar.gz "$url"; then \
-			success=1; \
-			break; \
-		fi; \
-	done; \
-	[ -n "$success" ]; \
-	\
-	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
-	\
-	success=; \
-	for url in $TOMCAT_ASC_URLS; do \
-		if wget -O tomcat.tar.gz.asc "$url"; then \
-			success=1; \
-			break; \
-		fi; \
-	done; \
-	[ -n "$success" ]; \
-	\
 	gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz; \
-	tar -xvf tomcat.tar.gz --strip-components=1; \
+	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
 	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
-	tar -xvf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
+	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
 	apt-get install -y --no-install-recommends \
 		dpkg-dev \
 		gcc \
@@ -86,7 +74,7 @@ RUN set -eux; \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
 		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-		aprConfig="$(which apr-1-config)"; \
+		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
 			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
