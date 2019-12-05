@@ -20,6 +20,7 @@ env:
   - CONTEXT=8.5/jdk11/adoptopenjdk-openj9
   - CONTEXT=8.5/jdk11/corretto
   - CONTEXT=8.5/jdk8/openjdk
+  - CONTEXT=8.5/jdk8_u151/openjdk
   - CONTEXT=8.5/jdk8/openjdk-slim
   - CONTEXT=8.5/jdk8/adoptopenjdk-hotspot
   - CONTEXT=8.5/jdk8/adoptopenjdk-openj9
