@@ -113,18 +113,28 @@ for version in "${versions[@]}"; do
 		exit 1
 	fi
 
-	fullVersion="$(
+	possibleVersions="$(
 		curl -fsSL --compressed "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/" \
 			| grep '<a href="v'"$version." \
 			| sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' \
-			| sort -V \
-			| tail -1
+			| sort -rV
 	)"
-
-	sha512="$(
-		curl -fsSL "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/v$fullVersion/bin/apache-tomcat-$fullVersion.tar.gz.sha512" \
-			| cut -d' ' -f1
-	)"
+	fullVersion=
+	sha512=
+	for possibleVersion in $possibleVersions; do
+		if possibleSha512="$(
+			curl -fsSL "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/v$possibleVersion/bin/apache-tomcat-$possibleVersion.tar.gz.sha512" \
+				| cut -d' ' -f1
+		)" && [ -n "$possibleSha512" ]; then
+			fullVersion="$possibleVersion"
+			sha512="$possibleSha512"
+			break
+		fi
+	done
+	if [ -z "$fullVersion" ]; then
+		echo >&2 "error: failed to find latest release for $version"
+		exit 1
+	fi
 
 	echo "$version: $fullVersion ($sha512)"
 
