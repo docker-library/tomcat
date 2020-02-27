@@ -145,7 +145,7 @@ for version in "${versions[@]}"; do
 		javaVersion="${javaVersion#jre}" # "11", "8"
 		javaVariant="${javaVariant%$javaVersion}" # "jdk", "jre"
 		# all variants in reverse alphabetical order followed by OpenJDK
-		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,-oracle,}}/; do
+		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,{-slim,}-buster,-oracle,}}/; do
 			vendorDir="${vendorDir%/}"
 			vendor="$(basename "$vendorDir")"
 			[ -d "$vendorDir" ] || continue
@@ -153,11 +153,11 @@ for version in "${versions[@]}"; do
 			template=
 			baseImage=
 			case "$vendor" in
-				openjdk | openjdk-slim)
+				openjdk | openjdk-slim | openjdk*-buster)
 					template='apt'
 					baseImage="openjdk:$javaVersion-$javaVariant"
-					if [ "$vendor" = 'openjdk-slim' ]; then
-						baseImage+='-slim'
+					if vendorVariant="${vendor#openjdk-}" && [ "$vendorVariant" != "$vendor" ]; then
+						baseImage+="-$vendorVariant"
 					fi
 					;;
 				openjdk-oracle)

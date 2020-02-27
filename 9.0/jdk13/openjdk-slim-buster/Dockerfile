@@ -1,4 +1,4 @@
-FROM openjdk:13-jdk-slim
+FROM openjdk:13-jdk-slim-buster
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
