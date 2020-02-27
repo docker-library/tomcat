@@ -2,6 +2,7 @@ language: bash
 services: docker
 
 env:
+  - CONTEXT=9.0/jdk13/openjdk-slim
   - CONTEXT=9.0/jdk13/openjdk-oracle
   - CONTEXT=9.0/jdk11/openjdk
   - CONTEXT=9.0/jdk11/openjdk-slim
