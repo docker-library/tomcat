@@ -78,7 +78,7 @@ join() {
 for version in "${versions[@]}"; do
 	for javaVariant in {jdk,jre}{13,12,11,8}; do
 		# OpenJDK, followed by all other variants alphabetically
-		for vendorVariant in {openjdk{,-oracle,-slim},adoptopenjdk-{hotspot,openj9},corretto}; do
+		for vendorVariant in {openjdk{,-oracle,{,-slim}-buster,-slim},adoptopenjdk-{hotspot,openj9},corretto}; do
 			variant="$javaVariant-$vendorVariant"
 			dir="$version/$javaVariant/$vendorVariant"
 			[ -f "$dir/Dockerfile" ] || continue
