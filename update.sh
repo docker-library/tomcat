@@ -138,7 +138,7 @@ for version in "${versions[@]}"; do
 
 	echo "$version: $fullVersion ($sha512)"
 
-	for javaDir in "$version"/{jre,jdk}{8,11,12,13}/; do
+	for javaDir in "$version"/{jre,jdk}{8,11,14}/; do
 		javaDir="${javaDir%/}"
 		javaVariant="$(basename "$javaDir")"
 		javaVersion="${javaVariant#jdk}"
