@@ -6,6 +6,11 @@ shopt -s nullglob
 # curl -fsSL 'https://www.apache.org/dist/tomcat/tomcat-8/KEYS' | gpg --import
 # gpg --fingerprint | grep 'Key fingerprint =' | cut -d= -f2 | sed -r 's/ +//g' | sort
 declare -A gpgKeys=(
+	# gpg: key 10C01C5A2F6059E7: public key "Mark E D Thomas <markt@apache.org>" imported
+	[10]='
+		A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
+	'
+
 	# gpg: key F22C4FED: public key "Andy Armstrong <andy@tagish.com>" imported
 	# gpg: key 86867BA6: public key "Jean-Frederic Clere (jfclere) <JFrederic.Clere@fujitsu-siemens.com>" imported
 	# gpg: key E86E29AC: public key "kevin seguin <seguin@apache.org>" imported
@@ -102,6 +107,9 @@ if [ ${#versions[@]} -eq 0 ]; then
 	versions=( */ )
 fi
 versions=( "${versions[@]%/}" )
+
+# sort version numbers with lowest first
+IFS=$'\n'; versions=( $(sort -V <<<"${versions[*]}") ); unset IFS
 
 travisEnv=
 for version in "${versions[@]}"; do
