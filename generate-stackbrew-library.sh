@@ -7,10 +7,12 @@ declare -A latestVariant=(
 	[8.0]="jdk8-$defaultVendorVariant"
 	[8.5]="jdk8-$defaultVendorVariant"
 	[9.0]="jdk11-$defaultVendorVariant"
+	[10.0]="jdk11-$defaultVendorVariant"
 )
 declare -A aliases=(
-	[8.5]='8 latest'
-	[9.0]='9'
+	[8.5]='8'
+	[9.0]='9 latest'
+	[10.0]='10'
 )
 
 self="$(basename "$BASH_SOURCE")"

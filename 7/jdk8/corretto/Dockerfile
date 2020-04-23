@@ -47,17 +47,20 @@ RUN set -eux; \
 	ddist() { \
 		local f="$1"; shift; \
 		local distFile="$1"; shift; \
+		local mvnFile="${1:-}"; \
 		local success=; \
 		local distUrl=; \
 		for distUrl in \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
-			'https://www.apache.org/dyn/closer.cgi?action=download&filename=' \
+			"https://www.apache.org/dyn/closer.cgi?action=download&filename=$distFile" \
 # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
-			https://www-us.apache.org/dist/ \
-			https://www.apache.org/dist/ \
-			https://archive.apache.org/dist/ \
+			"https://www-us.apache.org/dist/$distFile" \
+			"https://www.apache.org/dist/$distFile" \
+			"https://archive.apache.org/dist/$distFile" \
+# if all else fails, let's try Maven (https://www.mail-archive.com/users@tomcat.apache.org/msg134940.html; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat; https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/)
+			${mvnFile:+"https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/$mvnFile"} \
 		; do \
-			if curl -fL -o "$f" "$distUrl$distFile" && [ -s "$f" ]; then \
+			if curl -fL -o "$f" "$distUrl" && [ -s "$f" ]; then \
 				success=1; \
 				break; \
 			fi; \
@@ -65,9 +68,9 @@ RUN set -eux; \
 		[ -n "$success" ]; \
 	}; \
 	\
-	ddist 'tomcat.tar.gz' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz"; \
+	ddist 'tomcat.tar.gz' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz"; \
 	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
-	ddist 'tomcat.tar.gz.asc' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc"; \
+	ddist 'tomcat.tar.gz.asc' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz.asc"; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $GPG_KEYS; do \
 		gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
