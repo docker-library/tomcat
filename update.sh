@@ -111,7 +111,6 @@ versions=( "${versions[@]%/}" )
 # sort version numbers with lowest first
 IFS=$'\n'; versions=( $(sort -V <<<"${versions[*]}") ); unset IFS
 
-travisEnv=
 for version in "${versions[@]}"; do
 	majorVersion="${version%%.*}"
 
@@ -204,11 +203,6 @@ for version in "${versions[@]}"; do
 				-e 's/^(ENV GPG_KEYS) .*/\1 '"${versionGpgKeys[*]}"'/' \
 				"Dockerfile-$template.template" \
 				> "$vendorDir/Dockerfile"
-
-			travisEnv='\n  - '"CONTEXT=$vendorDir$travisEnv"
 		done
 	done
 done
-
-travis="$(awk -v 'RS=\n\n' -v travisEnv="$travisEnv" '$1 == "env:" { $0 = "env:" travisEnv } { printf "%s%s", $0, RS }' .travis.yml)"
-cat <<<"$travis" > .travis.yml
