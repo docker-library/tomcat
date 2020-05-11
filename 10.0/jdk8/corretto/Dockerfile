@@ -14,8 +14,8 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 ENV GPG_KEYS A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
 
 ENV TOMCAT_MAJOR 10
-ENV TOMCAT_VERSION 10.0.0-M4
-ENV TOMCAT_SHA512 de47e0f5b30860c00929f21f2c86a59ee8869b85c7990e19173408c9298fa1e267bb18962bc8f70b1af6a8006b598484dbe73499d389670de4983b9b4940733c
+ENV TOMCAT_VERSION 10.0.0-M5
+ENV TOMCAT_SHA512 09d6d4c084857d3a7846fdb4ed562ef49402a164dbd140636a7d8fe1370f902f56144d8a20cc71b698189b873ce38cec2a12c38abedb6d7173b091eb46ea26a9
 
 RUN set -eux; \
 	\
@@ -140,7 +140,7 @@ RUN set -e \
 	&& nativeLines="$(catalina.sh configtest 2>&1)" \
 	&& nativeLines="$(echo "$nativeLines" | grep 'Apache Tomcat Native')" \
 	&& nativeLines="$(echo "$nativeLines" | sort -u)" \
-	&& if ! echo "$nativeLines" | grep 'INFO: Loaded APR based Apache Tomcat Native library' >&2; then \
+	&& if ! echo "$nativeLines" | grep -E 'INFO: Loaded( APR based)? Apache Tomcat Native library' >&2; then \
 		echo >&2 "$nativeLines"; \
 		exit 1; \
 	fi
