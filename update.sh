@@ -172,11 +172,16 @@ for version in "${versions[@]}"; do
 					baseImage="openjdk:$javaVersion-$javaVariant-oracle"
 					;;
 
-				adoptopenjdk-hotspot | adoptopenjdk-openj9)
+				adoptopenjdk-hotspot)
 					template='apt'
 					adoptVariant="${vendor#adoptopenjdk-}"
 					baseImage="adoptopenjdk:$javaVersion-$javaVariant-$adoptVariant"
 					;;
+				adoptopenjdk-openj9)
+                                        template='apt-openj9'
+                                        adoptVariant="${vendor#adoptopenjdk-}"
+                                        baseImage="adoptopenjdk:$javaVersion-$javaVariant-$adoptVariant"
+                                        ;;
 
 				corretto)
 					template='yum'
