@@ -152,7 +152,7 @@ for version in "${versions[@]}"; do
 		javaVersion="${javaVersion#jre}" # "11", "8"
 		javaVariant="${javaVariant%$javaVersion}" # "jdk", "jre"
 		# all variants in reverse alphabetical order followed by OpenJDK
-		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{-slim,{-slim,}-buster,-oracle,}}/; do
+		for vendorDir in "$javaDir"/{corretto,adoptopenjdk-{openj9,hotspot},openjdk{{-slim,}-buster,-oraclelinux7}}/; do
 			vendorDir="${vendorDir%/}"
 			vendor="$(basename "$vendorDir")"
 			[ -d "$vendorDir" ] || continue
@@ -160,16 +160,16 @@ for version in "${versions[@]}"; do
 			template=
 			baseImage=
 			case "$vendor" in
-				openjdk | openjdk-slim | openjdk*-buster)
+				openjdk*-buster)
 					template='apt'
 					baseImage="openjdk:$javaVersion-$javaVariant"
 					if vendorVariant="${vendor#openjdk-}" && [ "$vendorVariant" != "$vendor" ]; then
 						baseImage+="-$vendorVariant"
 					fi
 					;;
-				openjdk-oracle)
+				openjdk-oraclelinux7)
 					template='yum'
-					baseImage="openjdk:$javaVersion-$javaVariant-oracle"
+					baseImage="openjdk:$javaVersion-$javaVariant-oraclelinux7"
 					;;
 
 				adoptopenjdk-hotspot | adoptopenjdk-openj9)
