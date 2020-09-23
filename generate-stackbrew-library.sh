@@ -83,7 +83,7 @@ join() {
 }
 
 for version in "${versions[@]}"; do
-	for javaVariant in {jdk,jre}{14,11,8}; do
+	for javaVariant in {jdk,jre}{15,14,11,8}; do
 		# OpenJDK, followed by all other variants alphabetically
 		for vendorVariant in {openjdk{-oraclelinux7,{,-slim}-buster},adoptopenjdk-{hotspot,openj9},corretto}; do
 			variant="$javaVariant-$vendorVariant"
