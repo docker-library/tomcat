@@ -42,7 +42,7 @@ RUN set -eux; \
 # if all else fails, let's try Maven (https://www.mail-archive.com/users@tomcat.apache.org/msg134940.html; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat; https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/)
 			${mvnFile:+"https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/$mvnFile"} \
 		; do \
-			if wget -O "$f" "$distUrl" && [ -s "$f" ]; then \
+			if wget -O "$f" "$distUrl" --progress=dot:giga && [ -s "$f" ]; then \
 				success=1; \
 				break; \
 			fi; \
@@ -101,8 +101,9 @@ RUN set -eux; \
 	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
 	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
 		| awk '/=>/ { print $(NF-1) }' \
+		| xargs -rt readlink -e \
 		| sort -u \
-		| xargs -r dpkg-query --search \
+		| xargs -rt dpkg-query --search \
 		| cut -d: -f1 \
 		| sort -u \
 		| xargs -r apt-mark manual \

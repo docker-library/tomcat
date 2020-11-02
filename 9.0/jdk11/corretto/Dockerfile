@@ -115,8 +115,9 @@ RUN set -eux; \
 	deps="$( \
 		find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
 			| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
+			| xargs -rt readlink -e \
 			| sort -u \
-			| xargs -r rpm --query --whatprovides \
+			| xargs -rt rpm --query --whatprovides \
 			| sort -u \
 	)"; \
 	[ -z "$deps" ] || yumdb set reason user $deps; \
