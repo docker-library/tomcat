@@ -93,7 +93,7 @@ RUN set -eux; \
 		apr-devel \
 		gcc \
 		make \
-		openssl-devel \
+		openssl11-devel \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
