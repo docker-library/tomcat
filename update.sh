@@ -52,37 +52,6 @@ declare -A gpgKeys=(
 		F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE
 		F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
 	'
-
-	# gpg: key 6A3AD3F4F22C4FED: public key "Andy Armstrong <andy@tagish.com>" imported
-	# gpg: key D3EFE6B686867BA6: public key "Jean-Frederic Clere (jfclere) <JFrederic.Clere@fujitsu-siemens.com>" imported
-	# gpg: key ACB77FC2E86E29AC: public key "kevin seguin <seguin@apache.org>" imported
-	# gpg: key 1931D684307A10A5: public key "Henri Gomez <hgomez@users.sourceforge.net>" imported
-	# gpg: key 1C506407564C17A3: public key "Mladen Turk (*** DEFAULT SIGNING KEY ***) <mturk@apache.org>" imported
-	# gpg: key 266191C37C037D42: public key "Yoav Shapira <yoavs@apache.org>" imported
-	# gpg: key 6FB21E8933C60243: 33 signatures not checked due to missing keys
-	# gpg: key 6FB21E8933C60243: public key "Mark E D Thomas <markt@apache.org>" imported
-	# gpg: key 10C01C5A2F6059E7: public key "Mark E D Thomas <markt@apache.org>" imported
-	# gpg: key 3C370389288584E7: 1 signature not checked due to a missing key
-	# gpg: key 3C370389288584E7: public key "R�my Maucherat <remm@apache.org>" imported
-	# gpg: key 3B7BBB100D811BBE: public key "Yoav Shapira <yoavs@computer.org>" imported
-	# gpg: key F72C284D731FABEE: public key "Tim Whittington (CODE SIGNING KEY) <timw@apache.org>" imported
-	# gpg: key 35CD23C10D498E23: public key "Mladen Turk (Default signing key) <mturk@apache.org>" imported
-	# gpg: key 208B0AB1D63011C7: public key "Violeta Georgieva Georgieva (CODE SIGNING KEY) <violetagg@apache.org>" imported
-	[7]='
-		05AB33110949707C93A279E3D3EFE6B686867BA6
-		07E48665A34DCAFAE522E5E6266191C37C037D42
-		47309207D818FFD8DCD3F83F1931D684307A10A5
-		541FBE7D8F78B25E055DDEE13C370389288584E7
-		61B832AC2F1C5A90F0F9B00A1C506407564C17A3
-		713DA88BE50911535FE716F5208B0AB1D63011C7
-		79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED
-		9BA44C2621385CB966EBA586F72C284D731FABEE
-		A27677289986DB50844682F8ACB77FC2E86E29AC
-		A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
-		DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
-		F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE
-		F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
-	'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"

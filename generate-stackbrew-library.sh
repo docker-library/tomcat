@@ -3,7 +3,6 @@ set -eu
 
 defaultVendorVariant='openjdk-buster'
 declare -A latestVariant=(
-	[7]="jdk8-$defaultVendorVariant"
 	[8.0]="jdk8-$defaultVendorVariant"
 	[8.5]="jdk8-$defaultVendorVariant"
 	[9.0]="jdk11-$defaultVendorVariant"
