@@ -24,10 +24,6 @@ RUN set -eux; \
 		yum install -y yum-utils; \
 		yumdb set reason dep yum-utils; \
 	fi; \
-	if [ -f /etc/oracle-release ]; then \
-# TODO there's an odd bug on Oracle Linux where installing "cpp" (which gets pulled in as a dependency of "gcc") and then marking it as automatically-installed will result in the "filesystem" package being removed during "yum autoremove" (which then fails), so we set it as manually-installed to compensate
-		yumdb set reason user filesystem; \
-	fi; \
 # a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
 	_yum_install_temporary() { ( set -eu +x; \
 		local pkg todo=''; \
