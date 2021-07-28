@@ -75,7 +75,7 @@ for version in "${versions[@]}"; do
 	fi
 
 	possibleVersions="$(
-		curl -fsSL --compressed "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/" \
+		curl -fsSL --compressed "https://downloads.apache.org/tomcat/tomcat-$majorVersion/" \
 			| grep '<a href="v'"$version." \
 			| sed -r 's!.*<a href="v([^"/]+)/?".*!\1!' \
 			| sort -rV
@@ -84,7 +84,7 @@ for version in "${versions[@]}"; do
 	sha512=
 	for possibleVersion in $possibleVersions; do
 		if possibleSha512="$(
-			curl -fsSL "https://www-us.apache.org/dist/tomcat/tomcat-$majorVersion/v$possibleVersion/bin/apache-tomcat-$possibleVersion.tar.gz.sha512" \
+			curl -fsSL "https://downloads.apache.org/tomcat/tomcat-$majorVersion/v$possibleVersion/bin/apache-tomcat-$possibleVersion.tar.gz.sha512" \
 				| cut -d' ' -f1
 		)" && [ -n "$possibleSha512" ]; then
 			fullVersion="$possibleVersion"

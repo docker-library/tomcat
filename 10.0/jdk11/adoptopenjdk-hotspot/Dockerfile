@@ -36,6 +36,7 @@ RUN set -eux; \
 # https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
 			"https://www.apache.org/dyn/closer.cgi?action=download&filename=$distFile" \
 # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+			"https://downloads.apache.org/$distFile" \
 			"https://www-us.apache.org/dist/$distFile" \
 			"https://www.apache.org/dist/$distFile" \
 			"https://archive.apache.org/dist/$distFile" \
