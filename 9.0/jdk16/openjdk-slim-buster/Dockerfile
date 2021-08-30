@@ -1,3 +1,9 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 FROM openjdk:16-jdk-slim-buster
 
 ENV CATALINA_HOME /usr/local/tomcat
@@ -9,8 +15,8 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
-# see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
+# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
+# see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
 ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
 
 ENV TOMCAT_MAJOR 9
@@ -22,8 +28,10 @@ RUN set -eux; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
-		gnupg dirmngr \
-		wget ca-certificates \
+		ca-certificates \
+		curl \
+		dirmngr \
+		gnupg \
 	; \
 	\
 	ddist() { \
@@ -43,7 +51,7 @@ RUN set -eux; \
 # if all else fails, let's try Maven (https://www.mail-archive.com/users@tomcat.apache.org/msg134940.html; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat; https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/)
 			${mvnFile:+"https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/$mvnFile"} \
 		; do \
-			if wget -O "$f" "$distUrl" --progress=dot:giga && [ -s "$f" ]; then \
+			if curl -fL -o "$f" "$distUrl" && [ -s "$f" ]; then \
 				success=1; \
 				break; \
 			fi; \
@@ -90,8 +98,10 @@ RUN set -eux; \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
 			--with-java-home="$JAVA_HOME" \
-			--with-ssl=yes; \
-		make -j "$(nproc)"; \
+			--with-ssl=yes \
+		; \
+		nproc="$(nproc)"; \
+		make -j "$nproc"; \
 		make install; \
 	); \
 	rm -rf "$nativeBuildDir"; \
@@ -107,8 +117,10 @@ RUN set -eux; \
 		| xargs -rt dpkg-query --search \
 		| cut -d: -f1 \
 		| sort -u \
+		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
 		| xargs -r apt-mark manual \
 	; \
+	\
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
