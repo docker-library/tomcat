@@ -1,3 +1,9 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 FROM amazoncorretto:8
 
 ENV CATALINA_HOME /usr/local/tomcat
@@ -9,8 +15,8 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/KEYS
-# see also "update.sh" (https://github.com/docker-library/tomcat/blob/master/update.sh)
+# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
+# see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
 ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
 
 ENV TOMCAT_MAJOR 9
@@ -101,23 +107,25 @@ RUN set -eux; \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
 			--with-java-home="$JAVA_HOME" \
-			--with-ssl=yes; \
-		make -j "$(nproc)"; \
+			--with-ssl=yes \
+		; \
+		nproc="$(nproc)"; \
+		make -j "$nproc"; \
 		make install; \
 	); \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
 # mark any explicit dependencies as manually installed
-	deps="$( \
-		find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-			| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
-			| xargs -rt readlink -e \
-			| sort -u \
-			| xargs -rt rpm --query --whatprovides \
-			| sort -u \
-	)"; \
-	[ -z "$deps" ] || yumdb set reason user $deps; \
+	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
+		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
+		| xargs -rt readlink -e \
+		| sort -u \
+		| xargs -rt rpm --query --whatprovides \
+		| sort -u \
+		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
+		| xargs -r yumdb set reason user \
+	; \
 	\
 # clean up anything added temporarily and not later marked as necessary
 	yum autoremove -y; \

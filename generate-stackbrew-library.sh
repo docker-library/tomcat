@@ -1,31 +1,20 @@
 #!/bin/bash
 set -eu
 
-defaultVendorVariant='openjdk-buster'
-declare -A latestVariant=(
-	[8.0]="jdk8-$defaultVendorVariant"
-	[8.5]="jdk8-$defaultVendorVariant"
-	[9.0]="jdk11-$defaultVendorVariant"
-	[10.0]="jdk11-$defaultVendorVariant"
-)
-declare -A vendorAliases=(
-	['openjdk-buster']='openjdk'
-	['openjdk-slim-buster']='openjdk-slim'
-)
 declare -A aliases=(
 	[8.5]='8'
-	[9.0]='9 latest'
-	[10.0]='10'
+	[9.0]='9'
+	[10.0]='10 latest'
+	[10.1]=''
 )
 
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-versions=( */ )
-versions=( "${versions[@]%/}" )
-
-# sort version numbers with highest first
-IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
+if [ "$#" -eq 0 ]; then
+	versions="$(jq -r 'keys | sort_by(tonumber) | reverse | map(@sh) | join(" ")' versions.json)"
+	eval "set -- $versions"
+fi
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
@@ -80,64 +69,109 @@ join() {
 	echo "${out#$sep}"
 }
 
-for version in "${versions[@]}"; do
-	for javaVariant in {jdk,jre}{16,15,11,8}; do
-		# OpenJDK, followed by all other variants alphabetically
-		for vendorVariant in {openjdk{,-slim}-buster,adoptopenjdk-{hotspot,openj9},corretto}; do
-			variant="$javaVariant-$vendorVariant"
-			dir="$version/$javaVariant/$vendorVariant"
-			[ -f "$dir/Dockerfile" ] || continue
+for version; do
+	export version
+	variants="$(jq -r '.[env.version].variants | map(@sh) | join(" ")' versions.json)"
+	eval "variants=( $variants )"
 
-			commit="$(dirCommit "$dir")"
+	fullVersion="$(jq -r '.[env.version].version' versions.json)"
 
-			fullVersion="$(awk '$1 == "ENV" && $2 == "TOMCAT_VERSION" { print $3; exit }' "$dir/Dockerfile")"
-			[ -n "$fullVersion" ]
+	versionAliases=()
+	while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
+		versionAliases+=( $fullVersion )
+		fullVersion="${fullVersion%[.-]*}"
+	done
+	versionAliases+=(
+		$version
+		${aliases[$version]:-}
+	)
 
-			versionAliases=()
-			while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
-				versionAliases+=( $fullVersion )
-				fullVersion="${fullVersion%[.-]*}"
-			done
-			versionAliases+=(
-				$version
-				${aliases[$version]:-}
+	latestVariant="$(jq -r '
+		.[env.version].variants
+		| map(
+			select(
+				(
+					# LTS Java releases
+					startswith("jdk11")
+					or startswith("jdk8")
+				) and (
+					split("/")[1]
+					| test("^openjdk-(?!slim-)")
+				)
 			)
+		)[0]
+	' versions.json)"
 
-			# "jdk8-openjdk-slim"
-			variantAliases=( "${versionAliases[@]/%/-$variant}" )
-			variantAliases=( "${variantAliases[@]//latest-/}" )
+	defaultOpenjdkVariant="$(jq -r '
+		.[env.version].variants
+		| map(
+			split("/")[1]
+			| select(test("^openjdk-(?!slim-)"))
+		)[0]
+	' versions.json)"
+	defaultOpenjdkSlimVariant="$(jq -r '
+		.[env.version].variants
+		| map(
+			split("/")[1]
+			| select(test("^openjdk-slim-"))
+		)[0]
+	' versions.json)"
+	defaultTemurinVariant="$(jq -r '
+		.[env.version].variants
+		| map(
+			split("/")[1]
+			| select(test("^temurin-"))
+		)[0]
+	' versions.json)"
+	declare -A vendorAliases=(
+		["$defaultOpenjdkVariant"]='openjdk'
+		["$defaultOpenjdkSlimVariant"]='openjdk-slim'
+		["$defaultTemurinVariant"]='temurin'
+	)
 
-			for vendorAlias in ${vendorAliases[$vendorVariant]:-}; do
-				aliasAliases=( "${versionAliases[@]/%/-$javaVariant-$vendorAlias}" )
-				aliasAliases=( "${aliasAliases[@]//latest-/}" )
-				variantAliases+=( "${aliasAliases[@]}" )
-			done
+	for variantDir in "${variants[@]}"; do
+		javaVariant="$(dirname "$variantDir")" # "jdk8", "jre11", etc
+		vendorVariant="$(basename "$variantDir")" # "openjdk-slim-buster", "corretto", etc.
+		variant="$javaVariant-$vendorVariant"
+		dir="$version/$variantDir"
+		[ -f "$dir/Dockerfile" ] || continue
 
-			# "jdk8"
-			if [ "$vendorVariant" = "$defaultVendorVariant" ]; then
-				javaAliases=( "${versionAliases[@]/%/-$javaVariant}" )
-				javaAliases=( "${javaAliases[@]//latest-/}" )
-				variantAliases+=( "${javaAliases[@]}" )
-			fi
+		commit="$(dirCommit "$dir")"
 
-			# "latest"
-			if [ "$variant" = "${latestVariant[$version]}" ]; then
-				variantAliases+=( "${versionAliases[@]}" )
-			fi
+		# "jdk8-openjdk-slim"
+		variantAliases=( "${versionAliases[@]/%/-$variant}" )
+		variantAliases=( "${variantAliases[@]//latest-/}" )
 
-			variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
-			[ -n "$variantParent" ]
-			variantArches="${parentRepoToArches[$variantParent]}"
-
-			echo
-			cat <<-EOE
-				Tags: $(join ', ' "${variantAliases[@]}")
-				Architectures: $(join ', ' $variantArches)
-				GitCommit: $commit
-				Directory: $dir
-			EOE
-			constraints="$(bashbrew cat --format '{{ .TagEntry.Constraints | join ", " }}' "https://github.com/docker-library/official-images/raw/master/library/$variantParent")"
-			[ -z "$constraints" ] || echo "Constraints: $constraints"
+		for vendorAlias in ${vendorAliases[$vendorVariant]:-}; do
+			aliasAliases=( "${versionAliases[@]/%/-$javaVariant-$vendorAlias}" )
+			aliasAliases=( "${aliasAliases[@]//latest-/}" )
+			variantAliases+=( "${aliasAliases[@]}" )
 		done
+
+		# "jdk8"
+		if [ "$vendorVariant" = "$defaultOpenjdkVariant" ]; then
+			javaAliases=( "${versionAliases[@]/%/-$javaVariant}" )
+			javaAliases=( "${javaAliases[@]//latest-/}" )
+			variantAliases+=( "${javaAliases[@]}" )
+		fi
+
+		# "latest"
+		if [ "$variantDir" = "$latestVariant" ]; then
+			variantAliases+=( "${versionAliases[@]}" )
+		fi
+
+		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
+		[ -n "$variantParent" ]
+		variantArches="${parentRepoToArches[$variantParent]}"
+
+		echo
+		cat <<-EOE
+			Tags: $(join ', ' "${variantAliases[@]}")
+			Architectures: $(join ', ' $variantArches)
+			GitCommit: $commit
+			Directory: $dir
+		EOE
+		#constraints="$(bashbrew cat --format '{{ .TagEntry.Constraints | join ", " }}' "https://github.com/docker-library/official-images/raw/master/library/$variantParent")"
+		#[ -z "$constraints" ] || echo "Constraints: $constraints"
 	done
 done
