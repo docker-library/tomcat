@@ -51,7 +51,8 @@
       "jdk11/openjdk-slim-buster",
       "jre11/openjdk-slim-buster",
       "jdk11/corretto",
-      "jdk11/temurin-focal"
+      "jdk11/temurin-focal",
+      "jre11/temurin-focal"
     ],
     "version": "10.1.0-M4"
   },
