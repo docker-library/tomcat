@@ -2,6 +2,12 @@
   "10.0": {
     "sha512": "16e1879490bb0e5843059e3a475558f1990b03f897a7d5cce5788d6983598ec30cbf3749e30c18fb799f5068cab8407d04e9e6e9705700b152f90a3dc8bc0cb5",
     "variants": [
+      "jdk17/openjdk-bullseye",
+      "jdk17/openjdk-buster",
+      "jdk17/openjdk-slim-bullseye",
+      "jdk17/openjdk-slim-buster",
+      "jdk17/corretto",
+      "jdk17/temurin-focal",
       "jdk16/openjdk-bullseye",
       "jdk16/openjdk-buster",
       "jdk16/openjdk-slim-bullseye",
@@ -36,6 +42,12 @@
   "10.1": {
     "sha512": "fbc0721794f7d604b9036f67b995f31d541aee0eddc4d911274f0af2a13b264b2435450946192628efdef035eef50adcd929752fae8ca50dbb07b53e36e1bd48",
     "variants": [
+      "jdk17/openjdk-bullseye",
+      "jdk17/openjdk-buster",
+      "jdk17/openjdk-slim-bullseye",
+      "jdk17/openjdk-slim-buster",
+      "jdk17/corretto",
+      "jdk17/temurin-focal",
       "jdk16/openjdk-bullseye",
       "jdk16/openjdk-buster",
       "jdk16/openjdk-slim-bullseye",
@@ -59,6 +71,12 @@
   "8.5": {
     "sha512": "292a3f856b0a8c1d11fd1ba252cabd94794201cda4f951dd0522764449bed90f2f43a4a667cd6d28ce13c3b2096736978d9df91709c168ba7133c51544446433",
     "variants": [
+      "jdk17/openjdk-bullseye",
+      "jdk17/openjdk-buster",
+      "jdk17/openjdk-slim-bullseye",
+      "jdk17/openjdk-slim-buster",
+      "jdk17/corretto",
+      "jdk17/temurin-focal",
       "jdk16/openjdk-bullseye",
       "jdk16/openjdk-buster",
       "jdk16/openjdk-slim-bullseye",
@@ -93,6 +111,12 @@
   "9.0": {
     "sha512": "ee731b2d0c3ab7e14fa924dcb8d598707cedf714c9ce1f2c2d907a1fd51e26f7eec1343c3dc39e240ff64dac2e0213f154d23e5f94a430f429165b5df51f786f",
     "variants": [
+      "jdk17/openjdk-bullseye",
+      "jdk17/openjdk-buster",
+      "jdk17/openjdk-slim-bullseye",
+      "jdk17/openjdk-slim-buster",
+      "jdk17/corretto",
+      "jdk17/temurin-focal",
       "jdk16/openjdk-bullseye",
       "jdk16/openjdk-buster",
       "jdk16/openjdk-slim-bullseye",

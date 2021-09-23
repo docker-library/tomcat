@@ -92,6 +92,7 @@ for version; do
 			select(
 				(
 					# LTS Java releases
+					# TODO add jdk17 once the longevity of vanilla builds from http://jdk.java.net/17/ are determined (or alternative vanilla builds are made available)
 					startswith("jdk11")
 					or startswith("jdk8")
 				) and (
