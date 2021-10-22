@@ -12,7 +12,7 @@ self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 if [ "$#" -eq 0 ]; then
-	versions="$(jq -r 'keys | sort_by(tonumber) | reverse | map(@sh) | join(" ")' versions.json)"
+	versions="$(jq -r 'keys_unsorted | sort_by(tonumber) | reverse | map(@sh) | join(" ")' versions.json)"
 	eval "set -- $versions"
 fi
 
@@ -43,7 +43,7 @@ getArches() {
 	local officialImagesUrl='https://github.com/docker-library/official-images/raw/master/library/'
 
 	eval "declare -g -A parentRepoToArches=( $(
-		find -name 'Dockerfile' -exec awk '
+		find "$@" -name 'Dockerfile' -exec awk '
 				toupper($1) == "FROM" && $2 !~ /^('"$repo"'|scratch|.*\/.*)(:|$)/ {
 					print "'"$officialImagesUrl"'" $2
 				}
@@ -52,7 +52,7 @@ getArches() {
 			| xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
 	) )"
 }
-getArches 'tomcat'
+getArches 'tomcat' "$@"
 
 cat <<-EOH
 # this file is generated via https://github.com/docker-library/tomcat/blob/$(fileCommit "$self")/$self
