@@ -8,7 +8,11 @@
       "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
+      "jdk17/openj9-focal",
+      "jre17/openj9-focal",
       "jdk16/temurin-focal",
+      "jdk16/openj9-focal",
+      "jre16/openj9-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
       "jdk11/openjdk-buster",
@@ -20,6 +24,8 @@
       "jdk11/corretto",
       "jdk11/temurin-focal",
       "jre11/temurin-focal",
+      "jdk11/openj9-focal",
+      "jre11/openj9-focal",
       "jdk8/openjdk-bullseye",
       "jre8/openjdk-bullseye",
       "jdk8/openjdk-buster",
@@ -30,7 +36,9 @@
       "jre8/openjdk-slim-buster",
       "jdk8/corretto",
       "jdk8/temurin-focal",
-      "jre8/temurin-focal"
+      "jre8/temurin-focal",
+      "jdk8/openj9-focal",
+      "jre8/openj9-focal"
     ],
     "version": "10.0.14"
   },
@@ -43,7 +51,11 @@
       "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
+      "jdk17/openj9-focal",
+      "jre17/openj9-focal",
       "jdk16/temurin-focal",
+      "jdk16/openj9-focal",
+      "jre16/openj9-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
       "jdk11/openjdk-buster",
@@ -54,7 +66,9 @@
       "jre11/openjdk-slim-buster",
       "jdk11/corretto",
       "jdk11/temurin-focal",
-      "jre11/temurin-focal"
+      "jre11/temurin-focal",
+      "jdk11/openj9-focal",
+      "jre11/openj9-focal"
     ],
     "version": "10.1.0-M8"
   },
@@ -67,7 +81,11 @@
       "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
+      "jdk17/openj9-focal",
+      "jre17/openj9-focal",
       "jdk16/temurin-focal",
+      "jdk16/openj9-focal",
+      "jre16/openj9-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
       "jdk11/openjdk-buster",
@@ -79,6 +97,8 @@
       "jdk11/corretto",
       "jdk11/temurin-focal",
       "jre11/temurin-focal",
+      "jdk11/openj9-focal",
+      "jre11/openj9-focal",
       "jdk8/openjdk-bullseye",
       "jre8/openjdk-bullseye",
       "jdk8/openjdk-buster",
@@ -89,7 +109,9 @@
       "jre8/openjdk-slim-buster",
       "jdk8/corretto",
       "jdk8/temurin-focal",
-      "jre8/temurin-focal"
+      "jre8/temurin-focal",
+      "jdk8/openj9-focal",
+      "jre8/openj9-focal"
     ],
     "version": "8.5.73"
   },
@@ -102,7 +124,11 @@
       "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
+      "jdk17/openj9-focal",
+      "jre17/openj9-focal",
       "jdk16/temurin-focal",
+      "jdk16/openj9-focal",
+      "jre16/openj9-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
       "jdk11/openjdk-buster",
@@ -114,6 +140,8 @@
       "jdk11/corretto",
       "jdk11/temurin-focal",
       "jre11/temurin-focal",
+      "jdk11/openj9-focal",
+      "jre11/openj9-focal",
       "jdk8/openjdk-bullseye",
       "jre8/openjdk-bullseye",
       "jdk8/openjdk-buster",
@@ -124,7 +152,9 @@
       "jre8/openjdk-slim-buster",
       "jdk8/corretto",
       "jdk8/temurin-focal",
-      "jre8/temurin-focal"
+      "jre8/temurin-focal",
+      "jdk8/openj9-focal",
+      "jre8/openj9-focal"
     ],
     "version": "9.0.56"
   }

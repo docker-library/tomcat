@@ -17,7 +17,7 @@ bashbrew --version > /dev/null
 allVariants='[]'
 for javaVersion in 17 16 11 8; do
 	# OpenJDK, followed by all other variants alphabetically
-	for vendorVariant in openjdk{,-slim}-{bullseye,buster} corretto temurin-focal; do
+	for vendorVariant in openjdk{,-slim}-{bullseye,buster} corretto temurin-focal openj9-focal; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
 			if image="$(jq -nr '

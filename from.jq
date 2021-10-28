@@ -16,6 +16,8 @@ def from:
 		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
 	elif . == "corretto" and java_variant == "jdk" then
 		"amazoncorretto:" + java_version
+	elif . == "openj9-focal" then
+		"ibm-semeru-runtimes:" + "open-" + java_version + "-" + java_variant + "-focal"
 	elif test("^temurin-") then
 		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")
 	else
