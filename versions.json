@@ -69,6 +69,7 @@
       "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
+      "jre17/temurin-focal",
       "jdk16/temurin-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
