@@ -97,7 +97,7 @@
     "version": "8.5.75"
   },
   "9.0": {
-    "sha512": "33c030a312a0a087deeb06fff921d13a23789e152d30620f33a368e7a2244c762fcf9acd55f3b90f08560704ba45bc2be820bccf2058b0cf5801a7b124f9056d",
+    "sha512": "74902b522abda04afb2be24d7410d4d93966d20fd07dde8f03bb281cdc714866f648babe1ff1ae85d663774779235f1cb9d701d5ce8884052f1f5efca7b62c68",
     "variants": [
       "jdk17/openjdk-bullseye",
       "jdk17/openjdk-buster",
@@ -130,6 +130,6 @@
       "jdk8/temurin-focal",
       "jre8/temurin-focal"
     ],
-    "version": "9.0.58"
+    "version": "9.0.59"
   }
 }
