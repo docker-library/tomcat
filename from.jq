@@ -20,6 +20,8 @@ def from:
 		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
 	elif test("^temurin-") then
 		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")
+	elif test("^sapmachine") then
+		"sapmachine:" + java_version
 	else
 		error("unknown vendor variant: " + .)
 	end

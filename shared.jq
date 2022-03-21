@@ -37,5 +37,6 @@ def has_openssl_ge_3(variant):
 		or contains("buster") # openjdk
 		# ubuntu
 		or contains("focal") # temurin
+		or contains("sapmachine")
 	) | not
 ;
