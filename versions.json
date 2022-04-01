@@ -36,7 +36,7 @@
     "version": "10.0.20"
   },
   "10.1": {
-    "sha512": "17b27a15b069a2b457e88980cd82ad0f417cbbb6e579e4343cc662eb69291ff3ada4ca881010d5973b0673488cd7c23d5220a7ccef42af2c2dfd189af937d4a7",
+    "sha512": "0fbc98d61be66ff2f8dbb61e6393dd5bc49fc0ea727fb5c9ad9a3bfeb863dfc1778b0e915837dc51753fe43d2043585f8c6a7e07efdb11b304f0e763a90559a2",
     "variants": [
       "jdk17/openjdk-bullseye",
       "jdk17/openjdk-buster",
@@ -58,7 +58,7 @@
       "jdk11/temurin-focal",
       "jre11/temurin-focal"
     ],
-    "version": "10.1.0-M12"
+    "version": "10.1.0-M14"
   },
   "8.5": {
     "sha512": "50f96584cbbbeeda92a3b573e7fe7e2c49e57ed4bc5246257dc1409abac0710b49fa7049a0dd9a3b8467bca2aa078ef608f49b676c1abf12529528ff71bb0260",
