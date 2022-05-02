@@ -53,10 +53,6 @@
   "8.5": {
     "sha512": "b50213e64cc1fd3da2847deda1ca13bee4c26663093c11d53c5ecfe4cdec8856e743b4a1d8488e0c0cbe9bf149e755df40a4140f3b155e2195e3bc6335de3512",
     "variants": [
-      "jdk17/openjdk-bullseye",
-      "jdk17/openjdk-buster",
-      "jdk17/openjdk-slim-bullseye",
-      "jdk17/openjdk-slim-buster",
       "jdk17/corretto",
       "jdk17/temurin-focal",
       "jre17/temurin-focal",
