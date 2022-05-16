@@ -82,7 +82,7 @@
     "version": "8.5.78"
   },
   "9.0": {
-    "sha512": "179af1d50a7d330d0842d3f1cae086bbc1b20e8f6752d66500663f3ac71d80f50113bbd29931e21c8e2eccd982f9f872e193364311316fdd67349130d440c83f",
+    "sha512": "4b905018164026756bd36ab9fde8f6b21c886acb8e5255d93f8938491e4d375dd18b9fc58ee23e3d78b16e8b81271c1c998e5592beedcac632567c2ca9411c69",
     "variants": [
       "jdk17/corretto",
       "jdk17/temurin-focal",
@@ -110,6 +110,6 @@
       "jdk8/temurin-focal",
       "jre8/temurin-focal"
     ],
-    "version": "9.0.62"
+    "version": "9.0.63"
   }
 }
