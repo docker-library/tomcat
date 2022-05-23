@@ -34,7 +34,6 @@
     "sha512": "b0eafe1599edf94dfa933dc857186dabbfbd80cfb2d9138f3120a48fd0172fc36c90a0243e92dd5163a5acc0336db617e978e6457698bcda700f0cb3e3e531dc",
     "variants": [
       "jdk17/corretto",
-      "jdk17/temurin-focal",
       "jre17/temurin-focal",
       "jdk11/openjdk-bullseye",
       "jre11/openjdk-bullseye",
