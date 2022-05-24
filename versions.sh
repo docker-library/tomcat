@@ -13,6 +13,17 @@ fi
 versions=( "${versions[@]%/}" )
 
 bashbrew --version > /dev/null
+tempDir="$(mktemp -d)"
+trap 'rm -rf "$tempDir"' EXIT
+_bashbrew_list() {
+	local image="$1"
+	local repo="${image%:*}"
+	local f="$tempDir/$repo"
+	if [ ! -s "$f" ]; then
+		wget -O "$f" "https://github.com/docker-library/official-images/raw/master/library/$repo"
+	fi
+	bashbrew --library "$tempDir" list --uniq "$image"
+}
 
 allVariants='[]'
 for javaVersion in 17 16 11 8; do
@@ -23,7 +34,7 @@ for javaVersion in 17 16 11 8; do
 			if image="$(jq -nr '
 				include "from";
 				from
-			' 2>/dev/null)" && bashbrew list --uniq "https://github.com/docker-library/official-images/raw/master/library/$image" &> /dev/null; then
+			' 2>/dev/null)" && _bashbrew_list "$image" &> /dev/null; then
 				allVariants="$(jq <<<"$allVariants" -c '. + [env.variant]')"
 			fi
 		done
