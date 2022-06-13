@@ -26,7 +26,7 @@ _bashbrew_list() {
 }
 
 allVariants='[]'
-for javaVersion in 17 16 11 8; do
+for javaVersion in 17 11 8; do
 	# OpenJDK, followed by all other variants alphabetically
 	for vendorVariant in openjdk{,-slim}-{bullseye,buster} corretto temurin-focal; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
