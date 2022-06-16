@@ -86,23 +86,6 @@ for version; do
 		${aliases[$version]:-}
 	)
 
-	latestVariant="$(jq -r '
-		.[env.version].variants
-		| map(
-			select(
-				(
-					# LTS Java releases
-					# TODO add jdk17 once the longevity of vanilla builds from http://jdk.java.net/17/ are determined (or alternative vanilla builds are made available)
-					startswith("jdk11")
-					or startswith("jdk8")
-				) and (
-					split("/")[1]
-					| test("^openjdk-(?!slim-)")
-				)
-			)
-		)[0]
-	' versions.json)"
-
 	defaultOpenjdkVariant="$(jq -r '
 		.[env.version].variants
 		| map(
@@ -130,6 +113,23 @@ for version; do
 		["$defaultTemurinVariant"]='temurin'
 	)
 
+	export defaultTemurinVariant
+	latestVariant="$(jq -r '
+		.[env.version].variants
+		| map(
+			select(
+				(
+					# LTS Java releases
+					startswith("jdk17")
+					or startswith("jdk11")
+					or startswith("jdk8")
+				) and (
+					split("/")[1] == env.defaultTemurinVariant
+				)
+			)
+		)[0]
+	' versions.json)"
+
 	for variantDir in "${variants[@]}"; do
 		javaVariant="$(dirname "$variantDir")" # "jdk8", "jre11", etc
 		vendorVariant="$(basename "$variantDir")" # "openjdk-slim-buster", "corretto", etc.
@@ -150,7 +150,7 @@ for version; do
 		done
 
 		# "jdk8"
-		if [ "$vendorVariant" = "$defaultOpenjdkVariant" ]; then
+		if [ "$vendorVariant" = "$defaultTemurinVariant" ]; then
 			javaAliases=( "${versionAliases[@]/%/-$javaVariant}" )
 			javaAliases=( "${javaAliases[@]//latest-/}" )
 			variantAliases+=( "${javaAliases[@]}" )
