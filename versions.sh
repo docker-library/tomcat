@@ -27,8 +27,12 @@ _bashbrew_list() {
 
 allVariants='[]'
 for javaVersion in 17 11 8; do
-	# OpenJDK, followed by all other variants alphabetically
-	for vendorVariant in openjdk{,-slim}-{bullseye,buster} corretto temurin-focal; do
+	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
+	for vendorVariant in \
+		temurin-focal \
+		openjdk{,-slim}-{bullseye,buster} \
+		corretto \
+	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
 			if image="$(jq -nr '
