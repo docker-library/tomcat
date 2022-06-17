@@ -1,0 +1,42 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
+FROM eclipse-temurin:21-jre-alpine
+
+ENV CATALINA_HOME /usr/local/tomcat
+ENV PATH $CATALINA_HOME/bin:$PATH
+RUN mkdir -p "$CATALINA_HOME"
+WORKDIR $CATALINA_HOME
+
+# let "Tomcat Native" live somewhere isolated
+ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
+ENV TOMCAT_MAJOR 9
+ENV TOMCAT_VERSION 9.0.108
+ENV TOMCAT_SHA512 243474cd54d8589c97f2db964b13b36920500a298b190370a8c58306db786bb30101c33d9ca85eddd8014c5d7f53fec1685beeb4fb7f3037ffcc2f4124c6c6b7
+
+COPY --from=tomcat:9.0.108-jdk21-temurin-alpine $CATALINA_HOME $CATALINA_HOME
+RUN set -eux; \
+	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
+	apk add --no-cache --virtual .tomcat-native-deps $deps
+
+# verify Tomcat Native is working properly
+RUN set -eux; \
+	nativeLines="$(catalina.sh configtest 2>&1)"; \
+	nativeLines="$(echo "$nativeLines" | grep 'Apache Tomcat Native')"; \
+	nativeLines="$(echo "$nativeLines" | sort -u)"; \
+	if ! echo "$nativeLines" | grep -E 'INFO: Loaded( APR based)? Apache Tomcat Native library' >&2; then \
+		echo >&2 "$nativeLines"; \
+		exit 1; \
+	fi
+
+EXPOSE 8080
+
+# upstream eclipse-temurin-provided entrypoint script caused https://github.com/docker-library/tomcat/issues/77 to come back as https://github.com/docker-library/tomcat/issues/302; use "/entrypoint.sh" at your own risk
+ENTRYPOINT []
+
+CMD ["catalina.sh", "run"]
