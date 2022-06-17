@@ -26,8 +26,8 @@ RUN set -eux; \
 		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
 		yumdb set reason dep yum-utils; \
 	fi; \
-# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
-	_yum_install_temporary() { ( set -eu +x; \
+# a helper function to install things, but only if they aren't installed (and to mark them so "autoremove" can purge them for us)
+	_install_temporary() { ( set -eu +x; \
 		local pkg todo=''; \
 		for pkg; do \
 			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
@@ -40,7 +40,7 @@ RUN set -eux; \
 			yumdb set reason dep $todo; \
 		fi; \
 	) }; \
-	_yum_install_temporary gzip tar; \
+	_install_temporary gzip tar; \
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -97,8 +97,9 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	_yum_install_temporary \
+	_install_temporary \
 		apr-devel \
+		findutils \
 		gcc \
 		make \
 		openssl11-devel \
@@ -121,6 +122,15 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
+# sh removes env vars it doesn't support (ones with periods)
+# https://github.com/docker-library/tomcat/issues/77
+	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
+	\
+# fix permissions (especially for running as non-root)
+# https://github.com/docker-library/tomcat/issues/35
+	chmod -R +rX .; \
+	chmod 1777 logs temp work; \
+	\
 # mark any explicit dependencies as manually installed
 	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
 		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
@@ -136,15 +146,6 @@ RUN set -eux; \
 	yum autoremove -y; \
 	yum clean all; \
 	rm -rf /var/cache/yum; \
-	\
-# sh removes env vars it doesn't support (ones with periods)
-# https://github.com/docker-library/tomcat/issues/77
-	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
-	\
-# fix permissions (especially for running as non-root)
-# https://github.com/docker-library/tomcat/issues/35
-	chmod -R +rX .; \
-	chmod 1777 logs temp work; \
 	\
 # smoke test
 	catalina.sh version
