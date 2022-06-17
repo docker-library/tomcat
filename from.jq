@@ -18,8 +18,15 @@ def from:
 		"amazoncorretto:" + java_version + ltrimstr("corretto") + "-" + java_variant
 	elif test("^openjdk-") then
 		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
+	elif test("^sapmachine-") and java_variant == "jdk" then
+		"sapmachine:" + java_version + "-ubuntu" + ltrimstr("sapmachine")
+	elif test("^semeru-") then
+		"ibm-semeru-runtimes:open-" + java_version + "-" + java_variant + ltrimstr("semeru")
 	elif test("^temurin-") then
-		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")
+		"eclipse-temurin:" + java_version + "-" + java_variant + (
+			ltrimstr("temurin")
+			| sub("alpine(?=[0-9]+)"; "alpine-") # temurin does "-alpine-N.NN" style tags
+		)
 	else
 		error("unknown vendor variant: " + .)
 	end
