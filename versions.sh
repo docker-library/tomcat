@@ -29,7 +29,7 @@ allVariants='[]'
 for javaVersion in 17 11 8; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
-		temurin-focal \
+		temurin-{jammy,focal} \
 		openjdk{,-slim}-{bullseye,buster} \
 		corretto \
 	; do
