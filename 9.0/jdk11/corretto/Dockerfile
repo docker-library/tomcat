@@ -27,7 +27,7 @@ RUN set -eux; \
 	\
 # http://yum.baseurl.org/wiki/YumDB.html
 	if ! command -v yumdb > /dev/null; then \
-		yum install -y yum-utils; \
+		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
 		yumdb set reason dep yum-utils; \
 	fi; \
 # a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
@@ -40,7 +40,7 @@ RUN set -eux; \
 		done; \
 		if [ -n "$todo" ]; then \
 			set -x; \
-			yum install -y $todo; \
+			yum install -y --setopt=skip_missing_names_on_install=False $todo; \
 			yumdb set reason dep $todo; \
 		fi; \
 	) }; \
