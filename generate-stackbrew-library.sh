@@ -86,46 +86,36 @@ for version; do
 		${aliases[$version]:-}
 	)
 
-	defaultOpenjdkVariant="$(jq -r '
-		.[env.version].variants
-		| map(
-			split("/")[1]
-			| select(test("^openjdk-(?!slim-)"))
-		)[0]
-	' versions.json)"
-	defaultOpenjdkSlimVariant="$(jq -r '
-		.[env.version].variants
-		| map(
-			split("/")[1]
-			| select(test("^openjdk-slim-"))
-		)[0]
-	' versions.json)"
-	defaultTemurinVariant="$(jq -r '
-		.[env.version].variants
-		| map(
-			split("/")[1]
-			| select(test("^temurin-"))
-		)[0]
-	' versions.json)"
-	declare -A vendorAliases=(
-		["$defaultOpenjdkVariant"]='openjdk'
-		["$defaultOpenjdkSlimVariant"]='openjdk-slim'
-		["$defaultTemurinVariant"]='temurin'
-	)
+	declare -A vendorAliases=()
+	defaultTemurinVariant=
+	for aliasToRegex in \
+		'corretto:^corretto-' \
+		'openjdk:openjdk-(?!slim)' 'openjdk-slim:^openjdk-slim' \
+		'temurin:^temurin-' \
+	; do
+		alias="${aliasToRegex%%:*}"
+		regex="${aliasToRegex#$alias:}"
+		variant="$(jq -r --arg regex "$regex" '
+			.[env.version].variants
+			| map(
+				split("/")[1]
+				| select(test($regex))
+			)[0]
+		' versions.json)"
+		if [ -n "$variant" ] && [ "$variant" != "$alias" ]; then
+			vendorAliases["$variant"]+=" $alias"
+			if [ "$alias" = 'temurin' ]; then
+				defaultTemurinVariant="$variant"
+			fi
+		fi
+	done
 
 	export defaultTemurinVariant
 	latestVariant="$(jq -r '
 		.[env.version].variants
 		| map(
 			select(
-				(
-					# LTS Java releases
-					startswith("jdk17")
-					or startswith("jdk11")
-					or startswith("jdk8")
-				) and (
-					split("/")[1] == env.defaultTemurinVariant
-				)
+				split("/")[1] == env.defaultTemurinVariant
 			)
 		)[0]
 	' versions.json)"

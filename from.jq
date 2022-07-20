@@ -1,3 +1,5 @@
+# this file expects "env.variant" (but has no other dependency)
+
 def java_dir:
 	env.variant | split("/")[0] # "jdk16", etc
 ;
@@ -12,10 +14,10 @@ def vendor_variant:
 ;
 def from:
 	vendor_variant
-	| if test("^openjdk-") then
+	| if test("^corretto-") then
+		"amazoncorretto:" + java_version + ltrimstr("corretto") + "-" + java_variant
+	elif test("^openjdk-") then
 		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
-	elif . == "corretto" and java_variant == "jdk" then
-		"amazoncorretto:" + java_version
 	elif test("^temurin-") then
 		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")
 	else

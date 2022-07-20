@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM openjdk:11-jdk-slim-bullseye
+FROM amazoncorretto:11-al2-jdk
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -15,24 +15,36 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-10/KEYS
+# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
 # see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
-ENV GPG_KEYS A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
+ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
 
-ENV TOMCAT_MAJOR 10
-ENV TOMCAT_VERSION 10.1.0-M16
-ENV TOMCAT_SHA512 ad25f3393324ce42619d6aeeb685186322776b5ba4583453c5e16957fa71cd64fa9f30e379985d57a701be43e9475991312893ee87979e69dd2b51de06510060
+ENV TOMCAT_MAJOR 9
+ENV TOMCAT_VERSION 9.0.65
+ENV TOMCAT_SHA512 2ae846848b8436856be11cfa18d9c62caa06ca7d3134012b2e10cbf6078753c4af20cc5d37f7dc75f1779f5c59d7c033850b8626534c3ce7e389641a67963cf6
 
 RUN set -eux; \
 	\
-	savedAptMark="$(apt-mark showmanual)"; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		ca-certificates \
-		curl \
-		dirmngr \
-		gnupg \
-	; \
+# http://yum.baseurl.org/wiki/YumDB.html
+	if ! command -v yumdb > /dev/null; then \
+		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
+		yumdb set reason dep yum-utils; \
+	fi; \
+# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
+	_yum_install_temporary() { ( set -eu +x; \
+		local pkg todo=''; \
+		for pkg; do \
+			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
+				todo="$todo $pkg"; \
+			fi; \
+		done; \
+		if [ -n "$todo" ]; then \
+			set -x; \
+			yum install -y --setopt=skip_missing_names_on_install=False $todo; \
+			yumdb set reason dep $todo; \
+		fi; \
+	) }; \
+	_yum_install_temporary gzip tar; \
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -80,20 +92,17 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	apt-get install -y --no-install-recommends \
-		dpkg-dev \
+	_yum_install_temporary \
+		apr-devel \
 		gcc \
-		libapr1-dev \
-		libssl-dev \
 		make \
+		openssl11-devel \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
-			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -107,22 +116,21 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
+# mark any explicit dependencies as manually installed
 	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
+		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
 		| xargs -rt readlink -e \
 		| sort -u \
-		| xargs -rt dpkg-query --search \
-		| cut -d: -f1 \
+		| xargs -rt rpm --query --whatprovides \
 		| sort -u \
 		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r apt-mark manual \
+		| xargs -r yumdb set reason user \
 	; \
 	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	rm -rf /var/lib/apt/lists/*; \
+# clean up anything added temporarily and not later marked as necessary
+	yum autoremove -y; \
+	yum clean all; \
+	rm -rf /var/cache/yum; \
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77

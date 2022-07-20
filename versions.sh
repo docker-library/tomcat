@@ -31,7 +31,7 @@ for javaVersion in 17 11 8; do
 	for vendorVariant in \
 		temurin-{jammy,focal} \
 		openjdk{,-slim}-{bullseye,buster} \
-		corretto \
+		corretto-al2 \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
@@ -76,24 +76,24 @@ for version in "${versions[@]}"; do
 
 	export version fullVersion sha512
 	json="$(jq <<<"$json" -c '
+		include "shared";
 		.[env.version] = {
 			version: env.fullVersion,
 			sha512: env.sha512,
 			variants: (
 				env.allVariants | fromjson
-				| (env.version | tonumber) as $major
+				| (env.version | tonumber) as $version
 				| map(select(
-					split("/")[0]
-					| ltrimstr("jdk") | ltrimstr("jre")
-					| tonumber
-					# http://tomcat.apache.org/whichversion.html  ("Supported Java Versions")
-					| if $major >= 10.1 then
-						. >= 11
-					elif $major >= 9.0 then
-						. >= 8
-					else
-						. >= 7
-					end
+					(
+						split("/")[0]
+						| ltrimstr("jdk") | ltrimstr("jre")
+						| tonumber
+					) as $java_version
+					| is_supported_java_version($java_version)
+						and (
+							(is_native_ge_2 | not)
+							or has_openssl_ge_3(.)
+						)
 				))
 			),
 		}

@@ -6,7 +6,7 @@
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",
       "jre17/temurin-focal",
-      "jdk17/corretto",
+      "jdk17/corretto-al2",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy",
       "jdk11/temurin-focal",
@@ -19,7 +19,7 @@
       "jre11/openjdk-slim-bullseye",
       "jdk11/openjdk-slim-buster",
       "jre11/openjdk-slim-buster",
-      "jdk11/corretto",
+      "jdk11/corretto-al2",
       "jdk8/temurin-jammy",
       "jre8/temurin-jammy",
       "jdk8/temurin-focal",
@@ -32,33 +32,19 @@
       "jre8/openjdk-slim-bullseye",
       "jdk8/openjdk-slim-buster",
       "jre8/openjdk-slim-buster",
-      "jdk8/corretto"
+      "jdk8/corretto-al2"
     ],
     "version": "10.0.22"
   },
   "10.1": {
-    "sha512": "ad25f3393324ce42619d6aeeb685186322776b5ba4583453c5e16957fa71cd64fa9f30e379985d57a701be43e9475991312893ee87979e69dd2b51de06510060",
+    "sha512": "e56506984201f07c161eaa6757d5e35e834319a071bf8dadef58500d9983194f29c59ba4e42fe8d09c4629525aa11f81ce9b24bfeb31c675f6a0bf505d9b8c7d",
     "variants": [
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
-      "jdk17/temurin-focal",
-      "jre17/temurin-focal",
-      "jdk17/corretto",
       "jdk11/temurin-jammy",
-      "jre11/temurin-jammy",
-      "jdk11/temurin-focal",
-      "jre11/temurin-focal",
-      "jdk11/openjdk-bullseye",
-      "jre11/openjdk-bullseye",
-      "jdk11/openjdk-buster",
-      "jre11/openjdk-buster",
-      "jdk11/openjdk-slim-bullseye",
-      "jre11/openjdk-slim-bullseye",
-      "jdk11/openjdk-slim-buster",
-      "jre11/openjdk-slim-buster",
-      "jdk11/corretto"
+      "jre11/temurin-jammy"
     ],
-    "version": "10.1.0-M16"
+    "version": "10.1.0-M17"
   },
   "8.5": {
     "sha512": "729387275cce4a0900289722f6c70ebcf7aee924af671b110b8ea8577fd6d045d47f17d526c8db5fd41c8590102e7f5100e95e89f7fd511b941565812ecbed35",
@@ -67,7 +53,7 @@
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",
       "jre17/temurin-focal",
-      "jdk17/corretto",
+      "jdk17/corretto-al2",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy",
       "jdk11/temurin-focal",
@@ -80,7 +66,7 @@
       "jre11/openjdk-slim-bullseye",
       "jdk11/openjdk-slim-buster",
       "jre11/openjdk-slim-buster",
-      "jdk11/corretto",
+      "jdk11/corretto-al2",
       "jdk8/temurin-jammy",
       "jre8/temurin-jammy",
       "jdk8/temurin-focal",
@@ -93,7 +79,7 @@
       "jre8/openjdk-slim-bullseye",
       "jdk8/openjdk-slim-buster",
       "jre8/openjdk-slim-buster",
-      "jdk8/corretto"
+      "jdk8/corretto-al2"
     ],
     "version": "8.5.81"
   },
@@ -104,7 +90,7 @@
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",
       "jre17/temurin-focal",
-      "jdk17/corretto",
+      "jdk17/corretto-al2",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy",
       "jdk11/temurin-focal",
@@ -117,7 +103,7 @@
       "jre11/openjdk-slim-bullseye",
       "jdk11/openjdk-slim-buster",
       "jre11/openjdk-slim-buster",
-      "jdk11/corretto",
+      "jdk11/corretto-al2",
       "jdk8/temurin-jammy",
       "jre8/temurin-jammy",
       "jdk8/temurin-focal",
@@ -130,7 +116,7 @@
       "jre8/openjdk-slim-bullseye",
       "jdk8/openjdk-slim-buster",
       "jre8/openjdk-slim-buster",
-      "jdk8/corretto"
+      "jdk8/corretto-al2"
     ],
     "version": "9.0.65"
   }
