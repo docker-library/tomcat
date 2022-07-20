@@ -98,7 +98,7 @@ RUN set -eux; \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
 			--with-java-home="$JAVA_HOME" \
-			--with-ssl=yes \
+			--with-ssl \
 		; \
 		nproc="$(nproc)"; \
 		make -j "$nproc"; \
