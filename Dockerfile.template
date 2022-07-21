@@ -1,14 +1,7 @@
 {{
 	include "from"
 	;
-	def is_apt:
-		vendor_variant | (
-			startswith("openjdk")
-			or startswith("temurin")
-		)
-	;
-	def major:
-		env.version | split(".")[0]
+	include "shared"
 -}}
 FROM {{ from }}
 
@@ -193,7 +186,9 @@ RUN set -eux; \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
 			--with-java-home="$JAVA_HOME" \
+{{ if is_native_ge_2 then "" else ( -}}
 			--with-ssl \
+{{ ) end -}}
 		; \
 		nproc="$(nproc)"; \
 		make -j "$nproc"; \

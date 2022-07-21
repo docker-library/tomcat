@@ -30,10 +30,10 @@ generated_warning() {
 for version; do
 	export version
 
-	rm -rf "$version/"
-
 	variants="$(jq -r '.[env.version].variants | map(@sh) | join(" ")' versions.json)"
 	eval "variants=( $variants )"
+
+	rm -rf "$version/"
 
 	for variant in "${variants[@]}"; do
 		export variant
