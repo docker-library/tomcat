@@ -82,7 +82,6 @@ for version in "${versions[@]}"; do
 			sha512: env.sha512,
 			variants: (
 				env.allVariants | fromjson
-				| (env.version | tonumber) as $version
 				| map(select(
 					(
 						split("/")[0]
