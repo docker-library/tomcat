@@ -47,7 +47,7 @@
     "version": "10.1.0-M17"
   },
   "8.5": {
-    "sha512": "729387275cce4a0900289722f6c70ebcf7aee924af671b110b8ea8577fd6d045d47f17d526c8db5fd41c8590102e7f5100e95e89f7fd511b941565812ecbed35",
+    "sha512": "ba701002be9729e19b5d2e12e1f4a723a38ad4452ab235127a19397bc81e95adc060187501701ba0160f0017723525b506a42f0dbb4f9f91f1a1a53be1ba1b25",
     "variants": [
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
@@ -81,7 +81,7 @@
       "jre8/openjdk-slim-buster",
       "jdk8/corretto-al2"
     ],
-    "version": "8.5.81"
+    "version": "8.5.82"
   },
   "9.0": {
     "sha512": "2ae846848b8436856be11cfa18d9c62caa06ca7d3134012b2e10cbf6078753c4af20cc5d37f7dc75f1779f5c59d7c033850b8626534c3ce7e389641a67963cf6",
