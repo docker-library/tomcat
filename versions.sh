@@ -26,7 +26,7 @@ _bashbrew_list() {
 }
 
 allVariants='[]'
-for javaVersion in 17 11 8; do
+for javaVersion in 18 17 11 8; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
 		temurin-{jammy,focal} \
