@@ -58,6 +58,14 @@ for version in "${versions[@]}"; do
 	fullVersion=
 	sha512=
 	for possibleVersion in $possibleVersions; do
+		if [[ "$possibleVersion" == *-M* ]]; then
+			# "sort -V" considers "10.1.0-M17" to be newer than "10.1.0" even though it's a pre-release 😅
+			possibleVersionStable="${possibleVersion%%-M*}"
+			if grep -qP "^\Q$possibleVersionStable\E\$" <<<"$possibleVersions"; then
+				echo >&2 "note: skipping '$possibleVersion' as we seem to have '$possibleVersionStable'"
+				continue
+			fi
+		fi
 		if possibleSha512="$(
 			curl -fsSL "https://downloads.apache.org/tomcat/tomcat-$majorVersion/v$possibleVersion/bin/apache-tomcat-$possibleVersion.tar.gz.sha512" \
 				| cut -d' ' -f1
