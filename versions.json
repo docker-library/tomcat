@@ -1,25 +1,4 @@
 {
-  "10.0": {
-    "sha512": "33c51be9410eaa0ce1393f8ce80a42a9639b68c7b7af1e9e642045614c170a12f8841ce4142933d1f4d18ba7efc85c630f91c312e959dcdc64aae396c46bdd97",
-    "variants": [
-      "jdk17/temurin-jammy",
-      "jre17/temurin-jammy",
-      "jdk17/temurin-focal",
-      "jre17/temurin-focal",
-      "jdk17/corretto-al2",
-      "jdk11/temurin-jammy",
-      "jre11/temurin-jammy",
-      "jdk11/temurin-focal",
-      "jre11/temurin-focal",
-      "jdk11/corretto-al2",
-      "jdk8/temurin-jammy",
-      "jre8/temurin-jammy",
-      "jdk8/temurin-focal",
-      "jre8/temurin-focal",
-      "jdk8/corretto-al2"
-    ],
-    "version": "10.0.27"
-  },
   "10.1": {
     "sha512": "7fa381d1344ca51d9425567575a30f6d8ca3279234aa00a59f85cb589f00f35274de873e2ade2030599074e65d39d2ad6b1bd445b01cde0eb59bb19799631c4b",
     "variants": [
