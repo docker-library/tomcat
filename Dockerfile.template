@@ -28,6 +28,8 @@ ENV GPG_KEYS {{
 		"10": [
 			# Mark E D Thomas <markt@apache.org>
 			"A9C5DF4D22E99998D9875A5110C01C5A2F6059E7",
+			# Christopher Schultz <chris@christopherschultz.net>
+			"5C3C5F3E314C866292F359A8F3AD5C94A67F707E",
 			# trailing comma 👀
 			empty
 		],
