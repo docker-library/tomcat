@@ -8,7 +8,9 @@ def major:
 def is_supported_java_version(java):
 	# http://tomcat.apache.org/whichversion.html  ("Supported Java Versions")
 	(env.version | tonumber) as $version
-	| if $version >= 10.1 then
+	| if $version >= 11.0 then
+		java >= 17
+	elif $version >= 10.1 then
 		java >= 11
 	elif $version >= 9.0 then
 		java >= 8
