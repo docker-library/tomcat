@@ -131,7 +131,7 @@ RUN set -eux; \
 # fix permissions (especially for running as non-root)
 # https://github.com/docker-library/tomcat/issues/35
 	chmod -R +rX .; \
-	chmod 777 logs temp work; \
+	chmod 1777 logs temp work; \
 	\
 # smoke test
 	catalina.sh version
