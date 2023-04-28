@@ -30,7 +30,6 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		curl \
-		dirmngr \
 		gnupg \
 	; \
 	\
@@ -70,7 +69,7 @@ RUN set -eux; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
-	command -v gpgconf && gpgconf --kill all || :; \
+	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
 	\
 # https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Default_web_applications

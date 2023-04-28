@@ -91,7 +91,6 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		curl \
-		dirmngr \
 		gnupg \
 	; \
 {{ ) else ( -}}
@@ -153,7 +152,9 @@ RUN set -eux; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
-	command -v gpgconf && gpgconf --kill all || :; \
+{{ if vendor_variant | contains("al2") then "" else ( -}}
+	gpgconf --kill all; \
+{{ ) end -}}
 	rm -rf "$GNUPGHOME"; \
 	\
 # https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Default_web_applications
