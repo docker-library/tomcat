@@ -4,6 +4,8 @@
     "variants": [
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
+      "jdk17/corretto-al2023",
+      "jre17/corretto-al2023",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy"
     ],

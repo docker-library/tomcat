@@ -26,10 +26,29 @@ ENV TOMCAT_SHA512 c31c794092b160c5b0099f4dfb5cf17d711d93ae68a60e414691dba65ad80c
 RUN set -eux; \
 	\
 # http://yum.baseurl.org/wiki/YumDB.html
-	if ! command -v yumdb > /dev/null; then \
-		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
-		yumdb set reason dep yum-utils; \
-	fi; \
+        # solves yum/dnf incompatibility
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1682969
+        # _mark_package {0|1} <pkgs>
+        # 0 means dependency
+        # 1 means user
+        _mark_package() { \
+            if command dnf --version > /dev/null; then \
+                p="${1/0/group}"; \
+                p="${p/1/install}"; \
+                shift; \
+                dnf mark "$p" "$@"; \
+            else \
+                if ! command -v yumdb > /dev/null; then \
+                        yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
+                        yumdb set reason dep yum-utils; \
+                fi; \
+                p="${1/0/dep}"; \
+                p="${p/1/user}"; \
+                shift; \
+                yumdb set reason "$p" "$@"; \
+            fi; \
+        }; \
+        export -f _mark_package; \
 # a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
 	_yum_install_temporary() { ( set -eu +x; \
 		local pkg todo=''; \
@@ -40,11 +59,11 @@ RUN set -eux; \
 		done; \
 		if [ -n "$todo" ]; then \
 			set -x; \
-			yum install -y --setopt=skip_missing_names_on_install=False $todo; \
-			yumdb set reason dep $todo; \
+			yum install -y --allowerasing --setopt=skip_missing_names_on_install=False $todo; \
+			_mark_package 0 $todo; \
 		fi; \
 	) }; \
-	_yum_install_temporary gzip tar; \
+	_yum_install_temporary gzip tar gnupg2; \
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -123,7 +142,7 @@ RUN set -eux; \
 		| xargs -rt rpm --query --whatprovides \
 		| sort -u \
 		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r yumdb set reason user \
+		| xargs -r bash -c '_mark_package 1 "$@"' _ \
 	; \
 	\
 # clean up anything added temporarily and not later marked as necessary

@@ -33,7 +33,7 @@ def has_openssl_ge_3(variant):
 	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
 	variant | (
 		# amazonlinux
-		contains("al2") # corretto
+		( contains("al2") and contains("al20") |not ) # corretto
 		# debian
 		or contains("bullseye") # openjdk
 		or contains("buster") # openjdk
