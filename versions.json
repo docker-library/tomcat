@@ -18,7 +18,7 @@
     "version": "11.0.0-M6"
   },
   "8.5": {
-    "sha512": "328c6f5e9515baa1dc8c4d81db51194688be36a6dbc9fc0f6444d1a8f692ca0efb8b90555aed23cb28fe2a69ab1fd6b9b71c047212c7bbf6445bba193debbc09",
+    "sha512": "bce0659288ae46bcf7218dc133b7455d395572db6d09cba244119caf02c24590db0959e773a6e9187b6dbd0934482fe3f34add9e3ec512af8a9fe224993a9fe0",
     "variants": [
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
@@ -36,7 +36,7 @@
       "jre8/temurin-focal",
       "jdk8/corretto-al2"
     ],
-    "version": "8.5.89"
+    "version": "8.5.90"
   },
   "9.0": {
     "sha512": "028163cbe15367f0ab60e086b0ebc8d774e62d126d82ae9152f863d4680e280b11c9503e3b51ee7089ca9bea1bfa5b535b244a727a3021e5fa72dd7e9569af9a",
