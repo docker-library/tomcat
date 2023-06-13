@@ -2,6 +2,8 @@
   "10.1": {
     "sha512": "be35edeb7f63be2d087da6b5cf3c1250eb5fbaa484ba788870780109278d1f5607bf8dfb40f718beda82352109c131fc97f7907f5521dc462bd60773b33e2c68",
     "variants": [
+      "jdk21/openjdk-bookworm",
+      "jdk21/openjdk-slim-bookworm",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
       "jdk11/temurin-jammy",
@@ -10,16 +12,20 @@
     "version": "10.1.10"
   },
   "11.0": {
-    "sha512": "b3b5f0191fc87d50626101be9cf56cc31bb4fe9eb755a59e17a5786a40fe9241664942e95ddee7e7a155b2d26df1ee032bbab91936ccc42f4e3ffc12a8083658",
+    "sha512": "5cf6f732dbed858e255c5d82c624fedfb9cbb4e3af06503840d446b94ca7d8ba6a7e5328f7006fdc18fb6fab178948a33b47f6dff4d651893ac4d185713c0a21",
     "variants": [
-      "jdk17/temurin-jammy",
-      "jre17/temurin-jammy"
+      "jdk21/openjdk-bookworm",
+      "jdk21/openjdk-slim-bookworm"
     ],
-    "version": "11.0.0-M6"
+    "version": "11.0.0-M7"
   },
   "8.5": {
     "sha512": "bce0659288ae46bcf7218dc133b7455d395572db6d09cba244119caf02c24590db0959e773a6e9187b6dbd0934482fe3f34add9e3ec512af8a9fe224993a9fe0",
     "variants": [
+      "jdk21/openjdk-bookworm",
+      "jdk21/openjdk-bullseye",
+      "jdk21/openjdk-slim-bookworm",
+      "jdk21/openjdk-slim-bullseye",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",
@@ -41,6 +47,10 @@
   "9.0": {
     "sha512": "028163cbe15367f0ab60e086b0ebc8d774e62d126d82ae9152f863d4680e280b11c9503e3b51ee7089ca9bea1bfa5b535b244a727a3021e5fa72dd7e9569af9a",
     "variants": [
+      "jdk21/openjdk-bookworm",
+      "jdk21/openjdk-bullseye",
+      "jdk21/openjdk-slim-bookworm",
+      "jdk21/openjdk-slim-bullseye",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",

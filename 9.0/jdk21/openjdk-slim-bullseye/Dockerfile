@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM eclipse-temurin:17-jdk-jammy
+FROM openjdk:21-jdk-slim-bullseye
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -15,13 +15,13 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-11/KEYS
+# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
 # see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
-ENV GPG_KEYS A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
+ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
 
-ENV TOMCAT_MAJOR 11
-ENV TOMCAT_VERSION 11.0.0-M6
-ENV TOMCAT_SHA512 b3b5f0191fc87d50626101be9cf56cc31bb4fe9eb755a59e17a5786a40fe9241664942e95ddee7e7a155b2d26df1ee032bbab91936ccc42f4e3ffc12a8083658
+ENV TOMCAT_MAJOR 9
+ENV TOMCAT_VERSION 9.0.76
+ENV TOMCAT_SHA512 028163cbe15367f0ab60e086b0ebc8d774e62d126d82ae9152f863d4680e280b11c9503e3b51ee7089ca9bea1bfa5b535b244a727a3021e5fa72dd7e9569af9a
 
 RUN set -eux; \
 	\
@@ -97,6 +97,7 @@ RUN set -eux; \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
 			--with-java-home="$JAVA_HOME" \
+			--with-ssl \
 		; \
 		nproc="$(nproc)"; \
 		make -j "$nproc"; \
