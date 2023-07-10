@@ -12,12 +12,12 @@
     "version": "10.1.11"
   },
   "11.0": {
-    "sha512": "5cf6f732dbed858e255c5d82c624fedfb9cbb4e3af06503840d446b94ca7d8ba6a7e5328f7006fdc18fb6fab178948a33b47f6dff4d651893ac4d185713c0a21",
+    "sha512": "8b3c3f3647121eae3f53b8a2fd0518cabfde469e9fe9a41cd7c530c3631da65f4df373669a582f421f62f226709393b686f509e0abf31e41a4080d092750fd2e",
     "variants": [
       "jdk21/openjdk-bookworm",
       "jdk21/openjdk-slim-bookworm"
     ],
-    "version": "11.0.0-M7"
+    "version": "11.0.0-M9"
   },
   "8.5": {
     "sha512": "bce0659288ae46bcf7218dc133b7455d395572db6d09cba244119caf02c24590db0959e773a6e9187b6dbd0934482fe3f34add9e3ec512af8a9fe224993a9fe0",
