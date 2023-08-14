@@ -1,6 +1,6 @@
 {
   "10.1": {
-    "sha512": "ad754aa695898cf8af5b64f4e29da7013fb39f808a90fa0e030228680a17c01b10bb0904762417ebac99b075947e4ea26f2f22f5da2aa4e399237468b76fa4fb",
+    "sha512": "f7571ca313abdd66d3d19d8527a7b23609585984386cb1c9bc451ba99cf0bcb452c1c1bad064a845765c74daa37b6893c38fefcfacbbaedffa9f900e60789bfd",
     "variants": [
       "jdk21/openjdk-bookworm",
       "jdk21/openjdk-slim-bookworm",
@@ -9,7 +9,7 @@
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy"
     ],
-    "version": "10.1.11"
+    "version": "10.1.12"
   },
   "11.0": {
     "sha512": "8b3c3f3647121eae3f53b8a2fd0518cabfde469e9fe9a41cd7c530c3631da65f4df373669a582f421f62f226709393b686f509e0abf31e41a4080d092750fd2e",
