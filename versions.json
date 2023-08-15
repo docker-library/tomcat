@@ -45,7 +45,7 @@
     "version": "8.5.92"
   },
   "9.0": {
-    "sha512": "c9f2e60489d07f25b53f715918f4b082c5bb69dbc497e0a9d3d5e3a0d351ff2e0ec8dfc5657de840ee5b3dea6174b27630033b38e36fa4c06b08664e70dec8df",
+    "sha512": "7a0d99b5fc37c9e9ac26b554fab9147ce0a2ba59fad41e2565b15e9f6e137bf0105f5c9cd6b7b508837ff24feb7b95b2aba49e0abc7b1480a30a11606e79802a",
     "variants": [
       "jdk21/openjdk-bookworm",
       "jdk21/openjdk-bullseye",
@@ -67,6 +67,6 @@
       "jre8/temurin-focal",
       "jdk8/corretto-al2"
     ],
-    "version": "9.0.78"
+    "version": "9.0.79"
   }
 }
