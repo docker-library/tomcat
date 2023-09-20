@@ -3,11 +3,7 @@
     "sha512": "406c0c367ac6ad95bb724ecc3a3c340ad7ded8c62287d657811eeec496eaaca1f5add52d2f46111da1426ae67090c543f6deccfeb5fdf4bdae32f9b39e773265",
     "variants": [
       "jdk21/openjdk-bookworm",
-      "jdk21/openjdk-slim-bookworm",
-      "jdk17/temurin-jammy",
-      "jre17/temurin-jammy",
-      "jdk11/temurin-jammy",
-      "jre11/temurin-jammy"
+      "jdk21/openjdk-slim-bookworm"
     ],
     "version": "10.1.13"
   },
