@@ -26,6 +26,7 @@
       "jdk21/openjdk-bullseye",
       "jdk21/openjdk-slim-bookworm",
       "jdk21/openjdk-slim-bullseye",
+      "jdk21/corretto-al2",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
       "jdk17/temurin-focal",
