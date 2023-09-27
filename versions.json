@@ -17,10 +17,6 @@
   "8.5": {
     "sha512": "fdd9bd768c2c8b7f57c75f1a4863bd2bde55e8ea7c8b9cb81427ea8be652540bdcb1ff1cd625b9fb0dd48eb750ebef0f0244d12ac574998d5df3a0d339699bcc",
     "variants": [
-      "jdk21/openjdk-bookworm",
-      "jdk21/openjdk-bullseye",
-      "jdk21/openjdk-slim-bookworm",
-      "jdk21/openjdk-slim-bullseye",
       "jdk21/corretto-al2",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
