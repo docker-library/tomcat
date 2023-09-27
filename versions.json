@@ -11,10 +11,7 @@
   },
   "11.0": {
     "sha512": "0404346b353030f776448af8ae4495d45c4c73c27bf9a9bfa5c53508ec51b0200e93e21f5526a28856639127fc20cc546e880908ef182b1653e5fd5ddb056fc5",
-    "variants": [
-      "jdk21/openjdk-bookworm",
-      "jdk21/openjdk-slim-bookworm"
-    ],
+    "variants": [],
     "version": "11.0.0-M11"
   },
   "8.5": {
