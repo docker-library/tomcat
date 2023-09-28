@@ -94,13 +94,15 @@ RUN set -eux; \
 		gnupg \
 	; \
 {{ ) else ( -}}
+{{ if is_yum then ( -}}
 # http://yum.baseurl.org/wiki/YumDB.html
 	if ! command -v yumdb > /dev/null; then \
 		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
 		yumdb set reason dep yum-utils; \
 	fi; \
-# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
-	_yum_install_temporary() { ( set -eu +x; \
+{{ ) else "" end -}}
+# a helper function to install things, but only if they aren't installed (and to set their "reason" to "dep" so "autoremove" can purge them for us)
+	_install_temporary() { ( set -eu +x; \
 		local pkg todo=''; \
 		for pkg; do \
 			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
@@ -109,11 +111,21 @@ RUN set -eux; \
 		done; \
 		if [ -n "$todo" ]; then \
 			set -x; \
+{{ if is_yum then ( -}}
 			yum install -y --setopt=skip_missing_names_on_install=False $todo; \
 			yumdb set reason dep $todo; \
+{{ ) else ( -}}
+			dnf install -y $todo; \
+			dnf mark remove $todo; \
+{{ ) end -}}
 		fi; \
 	) }; \
-	_yum_install_temporary gzip tar; \
+	_install_temporary gzip tar; \
+{{ if vendor_variant | contains("al20") then ( -}}
+# gnupg2-minimal (installed by default) conflicts with gnupg2 and does not include dirmngr so cannot fetch keys
+	dnf install -y --allowerasing gnupg2; \
+{{ ) else "" end -}}
+
 {{ ) end -}}
 	\
 	ddist() { \
@@ -173,11 +185,16 @@ RUN set -eux; \
 		make \
 	; \
 {{ ) else ( -}}
-	_yum_install_temporary \
+	_install_temporary \
 		apr-devel \
+		findutils \
 		gcc \
 		make \
+{{ if vendor_variant | variant_is_al2 then ( -}}
 		openssl11-devel \
+{{ ) else ( -}}
+		openssl-devel \
+{{ ) end -}}
 	; \
 {{ ) end -}}
 	( \
@@ -206,6 +223,10 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
+# sh removes env vars it doesn't support (ones with periods)
+# https://github.com/docker-library/tomcat/issues/77
+	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
+	\
 {{ if is_apt then ( -}}
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
@@ -232,18 +253,14 @@ RUN set -eux; \
 		| xargs -rt rpm --query --whatprovides \
 		| sort -u \
 		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r yumdb set reason user \
+		| xargs -r {{ if is_yum then "yumdb set reason user" else "dnf mark install" end }} \
 	; \
 	\
 # clean up anything added temporarily and not later marked as necessary
-	yum autoremove -y; \
-	yum clean all; \
-	rm -rf /var/cache/yum; \
+	{{ if is_yum then "yum" else "dnf" end }} autoremove -y; \
+	{{ if is_yum then "yum" else "dnf" end }} clean all; \
+	rm -rf /var/cache/{{ if is_yum then "yum" else "dnf" end }}; \
 {{ ) end -}}
-	\
-# sh removes env vars it doesn't support (ones with periods)
-# https://github.com/docker-library/tomcat/issues/77
-	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
 	\
 # fix permissions (especially for running as non-root)
 # https://github.com/docker-library/tomcat/issues/35
@@ -260,9 +277,9 @@ RUN set -eux; \
 	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
 	rm -rf /var/lib/apt/lists/*
 {{ ) else ( -}}
-	xargs -rt yum install -y --setopt=skip_missing_names_on_install=False < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
-	yum clean all; \
-	rm -rf /var/cache/yum
+	xargs -rt {{ if is_yum then "yum" else "dnf" end }} install -y{{ if is_yum then " --setopt=skip_missing_names_on_install=False" else "" end }} < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
+	{{ if is_yum then "yum" else "dnf" end }} clean all; \
+	rm -rf /var/cache/{{ if is_yum then "yum" else "dnf" end }}
 {{ ) end -}}
 {{ ) end -}}
 
