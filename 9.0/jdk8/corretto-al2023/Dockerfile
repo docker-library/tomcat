@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM eclipse-temurin:17-jdk-focal
+FROM amazoncorretto:8-al2023-jdk
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -15,23 +15,34 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
+# see https://www.apache.org/dist/tomcat/tomcat-9/KEYS
 # see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
-ENV GPG_KEYS 05AB33110949707C93A279E3D3EFE6B686867BA6 07E48665A34DCAFAE522E5E6266191C37C037D42 47309207D818FFD8DCD3F83F1931D684307A10A5 541FBE7D8F78B25E055DDEE13C370389288584E7 5C3C5F3E314C866292F359A8F3AD5C94A67F707E 765908099ACF92702C7D949BFA0C35EA8AA299F1 79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED 9BA44C2621385CB966EBA586F72C284D731FABEE A27677289986DB50844682F8ACB77FC2E86E29AC A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243 F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23
+ENV GPG_KEYS 48F8E69F6390C9F25CFEDCD268248959359E722B A9C5DF4D22E99998D9875A5110C01C5A2F6059E7 DCFD35E0BF8CA7344752DE8B6FB21E8933C60243
 
-ENV TOMCAT_MAJOR 8
-ENV TOMCAT_VERSION 8.5.93
-ENV TOMCAT_SHA512 fdd9bd768c2c8b7f57c75f1a4863bd2bde55e8ea7c8b9cb81427ea8be652540bdcb1ff1cd625b9fb0dd48eb750ebef0f0244d12ac574998d5df3a0d339699bcc
+ENV TOMCAT_MAJOR 9
+ENV TOMCAT_VERSION 9.0.80
+ENV TOMCAT_SHA512 24014441b0ccdd2dda238efa56e1a039476488943e6cf04f8a372a340a49dd21ce174ed68e2f5fcc43401e85fae6d00c5eac3d357653e91601737b6fa94476de
 
 RUN set -eux; \
 	\
-	savedAptMark="$(apt-mark showmanual)"; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		ca-certificates \
-		curl \
-		gnupg \
-	; \
+# a helper function to install things, but only if they aren't installed (and to set their "reason" to "dep" so "autoremove" can purge them for us)
+	_install_temporary() { ( set -eu +x; \
+		local pkg todo=''; \
+		for pkg; do \
+			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
+				todo="$todo $pkg"; \
+			fi; \
+		done; \
+		if [ -n "$todo" ]; then \
+			set -x; \
+			dnf install -y $todo; \
+			dnf mark remove $todo; \
+		fi; \
+	) }; \
+	_install_temporary gzip tar; \
+# gnupg2-minimal (installed by default) conflicts with gnupg2 and does not include dirmngr so cannot fetch keys
+	dnf install -y --allowerasing gnupg2; \
+
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -69,7 +80,6 @@ RUN set -eux; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
-	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
 	\
 # https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Default_web_applications
@@ -79,20 +89,18 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	apt-get install -y --no-install-recommends \
-		dpkg-dev \
+	_install_temporary \
+		apr-devel \
+		findutils \
 		gcc \
-		libapr1-dev \
-		libssl-dev \
 		make \
+		openssl-devel \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
-			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -110,22 +118,21 @@ RUN set -eux; \
 # https://github.com/docker-library/tomcat/issues/77
 	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
 	\
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
+# mark any explicit dependencies as manually installed
 	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
+		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
 		| xargs -rt readlink -e \
 		| sort -u \
-		| xargs -rt dpkg-query --search \
-		| cut -d: -f1 \
+		| xargs -rt rpm --query --whatprovides \
 		| sort -u \
 		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r apt-mark manual \
+		| xargs -r dnf mark install \
 	; \
 	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	rm -rf /var/lib/apt/lists/*; \
+# clean up anything added temporarily and not later marked as necessary
+	dnf autoremove -y; \
+	dnf clean all; \
+	rm -rf /var/cache/dnf; \
 	\
 # fix permissions (especially for running as non-root)
 # https://github.com/docker-library/tomcat/issues/35
@@ -146,8 +153,4 @@ RUN set -eux; \
 	fi
 
 EXPOSE 8080
-
-# upstream eclipse-temurin-provided entrypoint script caused https://github.com/docker-library/tomcat/issues/77 to come back as https://github.com/docker-library/tomcat/issues/302; use "/entrypoint.sh" at your own risk
-ENTRYPOINT []
-
 CMD ["catalina.sh", "run"]

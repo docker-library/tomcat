@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM eclipse-temurin:17-jdk-focal
+FROM amazoncorretto:11-al2023-jdk
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -25,13 +25,24 @@ ENV TOMCAT_SHA512 fdd9bd768c2c8b7f57c75f1a4863bd2bde55e8ea7c8b9cb81427ea8be65254
 
 RUN set -eux; \
 	\
-	savedAptMark="$(apt-mark showmanual)"; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		ca-certificates \
-		curl \
-		gnupg \
-	; \
+# a helper function to install things, but only if they aren't installed (and to set their "reason" to "dep" so "autoremove" can purge them for us)
+	_install_temporary() { ( set -eu +x; \
+		local pkg todo=''; \
+		for pkg; do \
+			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
+				todo="$todo $pkg"; \
+			fi; \
+		done; \
+		if [ -n "$todo" ]; then \
+			set -x; \
+			dnf install -y $todo; \
+			dnf mark remove $todo; \
+		fi; \
+	) }; \
+	_install_temporary gzip tar; \
+# gnupg2-minimal (installed by default) conflicts with gnupg2 and does not include dirmngr so cannot fetch keys
+	dnf install -y --allowerasing gnupg2; \
+
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -69,7 +80,6 @@ RUN set -eux; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
-	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
 	\
 # https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Default_web_applications
@@ -79,20 +89,18 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-	apt-get install -y --no-install-recommends \
-		dpkg-dev \
+	_install_temporary \
+		apr-devel \
+		findutils \
 		gcc \
-		libapr1-dev \
-		libssl-dev \
 		make \
+		openssl-devel \
 	; \
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
-			--build="$gnuArch" \
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -110,22 +118,21 @@ RUN set -eux; \
 # https://github.com/docker-library/tomcat/issues/77
 	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
 	\
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
+# mark any explicit dependencies as manually installed
 	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
+		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
 		| xargs -rt readlink -e \
 		| sort -u \
-		| xargs -rt dpkg-query --search \
-		| cut -d: -f1 \
+		| xargs -rt rpm --query --whatprovides \
 		| sort -u \
 		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r apt-mark manual \
+		| xargs -r dnf mark install \
 	; \
 	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	rm -rf /var/lib/apt/lists/*; \
+# clean up anything added temporarily and not later marked as necessary
+	dnf autoremove -y; \
+	dnf clean all; \
+	rm -rf /var/cache/dnf; \
 	\
 # fix permissions (especially for running as non-root)
 # https://github.com/docker-library/tomcat/issues/35
@@ -146,8 +153,4 @@ RUN set -eux; \
 	fi
 
 EXPOSE 8080
-
-# upstream eclipse-temurin-provided entrypoint script caused https://github.com/docker-library/tomcat/issues/77 to come back as https://github.com/docker-library/tomcat/issues/302; use "/entrypoint.sh" at your own risk
-ENTRYPOINT []
-
 CMD ["catalina.sh", "run"]
