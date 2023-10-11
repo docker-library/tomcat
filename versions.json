@@ -13,7 +13,10 @@
   },
   "11.0": {
     "sha512": "1bb9f8b58ff58699e984432b7cfe170b186f4786f833d95d5409d7d4e431a6d1e478f027fa1124e68f99fa68322ec0893f3d055af069482e95db0fa3892eb910",
-    "variants": [],
+    "variants": [
+      "jdk21/temurin-jammy",
+      "jre21/temurin-jammy"
+    ],
     "version": "11.0.0-M12"
   },
   "8.5": {
