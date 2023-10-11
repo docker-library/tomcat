@@ -22,6 +22,8 @@
   "8.5": {
     "sha512": "bee5399a0fef6dea774ac2b99ebf58b69c67079c0e870698be3c7786c88e9a120cb073223d0508621585e13f509f3fade9d276cfadeb0692e09feeb5f7bb2cc9",
     "variants": [
+      "jdk21/temurin-jammy",
+      "jre21/temurin-jammy",
       "jdk21/corretto-al2",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
