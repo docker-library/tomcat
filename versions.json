@@ -1,6 +1,6 @@
 {
   "10.1": {
-    "sha512": "ff9670f9cd49a604e47edfbcfb5855fe59342048c3278ea8736276b51327adf2d076973f3ad1b8aa7870ef26c28cf7111527be810b445c9927f2a457795f5cb6",
+    "sha512": "56d1478501bd63945aae08d9f7c1fd37e14761dd9606a3bf5996870256b542b561a354fb89c4693c5695d0f13fa217028115b311d50b4ecec03acc7785006638",
     "variants": [
       "jdk21/temurin-jammy",
       "jre21/temurin-jammy",
@@ -9,7 +9,7 @@
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy"
     ],
-    "version": "10.1.17"
+    "version": "10.1.18"
   },
   "11.0": {
     "sha512": "e653908a4f2695edd0222497cafb60a327989e7982bf4f531380e355bde17bc002a3cfd2dd58db5142eacbaf66a260db7dfa968c29a2365528cfe0cba4b74c54",
