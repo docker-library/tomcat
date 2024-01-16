@@ -53,12 +53,9 @@ RUN set -eux; \
 		local success=; \
 		local distUrl=; \
 		for distUrl in \
-# https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
-			"https://www.apache.org/dyn/closer.cgi?action=download&filename=$distFile" \
-# if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
-			"https://downloads.apache.org/$distFile" \
-			"https://www-us.apache.org/dist/$distFile" \
-			"https://www.apache.org/dist/$distFile" \
+# https://apache.org/history/mirror-history.html
+			"https://dlcdn.apache.org/$distFile" \
+# if the version is outdated, we have to pull from the archive
 			"https://archive.apache.org/dist/$distFile" \
 # if all else fails, let's try Maven (https://www.mail-archive.com/users@tomcat.apache.org/msg134940.html; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat; https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/)
 			${mvnFile:+"https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/$mvnFile"} \
