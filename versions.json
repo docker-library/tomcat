@@ -12,12 +12,12 @@
     "version": "10.1.18"
   },
   "11.0": {
-    "sha512": "06faef57675070c6272c7ac9c3c1db9a72f91ef424ea44259b69e406356910dc0bd9529bef4fb0434c03885559807bd94889fd6076d4a8a5502fbe77de2dc60b",
+    "sha512": "22e6bef88f3591ca1ef79a0f7a1a22ad327084be6dc887b21d35adeed71755c60b810a3d92584b1d254029c80acc1aa5d63c02fa0c7db76986479f7f08e466c5",
     "variants": [
       "jdk21/temurin-jammy",
       "jre21/temurin-jammy"
     ],
-    "version": "11.0.0-M16"
+    "version": "11.0.0-M17"
   },
   "8.5": {
     "sha512": "12f58114fe608fdc5f06e99a4ba01852396169f89d08e1ecf96ace36dd685c439519433e7750bfa7523f12c14788a3b5cb9ee3835dd1cce37e2cee121d69625e",
