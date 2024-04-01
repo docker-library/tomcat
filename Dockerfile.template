@@ -43,36 +43,6 @@ ENV GPG_KEYS {{
 			# trailing comma 👀
 			empty
 		],
-		"8": [
-			# Andy Armstrong <andy@tagish.com>
-			"79F7026C690BAA50B92CD8B66A3AD3F4F22C4FED",
-			# Jean-Frederic Clere (jfclere) <JFrederic.Clere@fujitsu-siemens.com>
-			"05AB33110949707C93A279E3D3EFE6B686867BA6",
-			# kevin seguin <seguin@apache.org>
-			"A27677289986DB50844682F8ACB77FC2E86E29AC",
-			# Henri Gomez <hgomez@users.sourceforge.net>
-			"47309207D818FFD8DCD3F83F1931D684307A10A5",
-			# Yoav Shapira <yoavs@apache.org>
-			"07E48665A34DCAFAE522E5E6266191C37C037D42",
-			# Mark E D Thomas <markt@apache.org>
-			"DCFD35E0BF8CA7344752DE8B6FB21E8933C60243",
-			# Mark E D Thomas <markt@apache.org>
-			"A9C5DF4D22E99998D9875A5110C01C5A2F6059E7",
-			# Rémy Maucherat <remm@apache.org>
-			"541FBE7D8F78B25E055DDEE13C370389288584E7",
-			# Yoav Shapira <yoavs@computer.org>
-			"F3A04C595DB5B6A5F1ECA43E3B7BBB100D811BBE",
-			# Tim Whittington (CODE SIGNING KEY) <timw@apache.org>
-			"9BA44C2621385CB966EBA586F72C284D731FABEE",
-			# Mladen Turk (Default signing key) <mturk@apache.org>
-			"F7DA48BB64BCB84ECBA7EE6935CD23C10D498E23",
-			# Konstantin Kolinko (CODE SIGNING KEY) <kkolinko@apache.org>
-			"765908099ACF92702C7D949BFA0C35EA8AA299F1",
-			# Christopher Schultz <chris@christopherschultz.net>
-			"5C3C5F3E314C866292F359A8F3AD5C94A67F707E",
-			# trailing comma 👀
-			empty
-		],
 	} | .[major] // error("missing GPG keys")
 	| sort
 	| join(" ")

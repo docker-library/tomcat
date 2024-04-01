@@ -12,10 +12,8 @@ def is_supported_java_version(java):
 		java >= 21
 	elif $version >= 10.1 then
 		java >= 11
-	elif $version >= 9.0 then
+	else # $version >= 9.0
 		java >= 8
-	else
-		java >= 7
 	end
 ;
 def is_apt:
