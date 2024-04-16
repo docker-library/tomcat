@@ -17,11 +17,13 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 # see https://www.apache.org/dist/tomcat/tomcat-{{ major }}/KEYS
 # see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
 ENV GPG_KEYS {{
-	# docker run --rm buildpack-deps:bullseye-curl bash -c 'wget -qO- https://www.apache.org/dist/tomcat/tomcat-10/KEYS | gpg --batch --import &> /dev/null && gpg --batch --list-keys --with-fingerprint --with-colons' | awk -F: '$1 == "pub" && $2 == "-" { pub = 1 } pub && $1 == "fpr" { fpr = $10 } $1 == "sub" { pub = 0 } pub && fpr && $1 == "uid" && $2 == "-" { print "\t\t\t#", $10; print "\t\t\t\"" fpr "\","; pub = 0 } END { print "\t\t\t# trailing comma 👀\n\t\t\tempty" }'
+	# docker run --rm buildpack-deps:bookworm-curl bash -c 'wget -qO- https://www.apache.org/dist/tomcat/tomcat-10/KEYS | gpg --batch --import &> /dev/null && gpg --batch --list-keys --with-fingerprint --with-colons' | awk -F: '$1 == "pub" && $2 == "-" { pub = 1 } pub && $1 == "fpr" { fpr = $10 } $1 == "sub" { pub = 0 } pub && fpr && $1 == "uid" && $2 == "-" { print "\t\t\t#", $10; print "\t\t\t\"" fpr "\","; pub = 0 } END { print "\t\t\t# trailing comma 👀\n\t\t\tempty" }'
 	{
 		"11": [
 			# Mark E D Thomas <markt@apache.org>
 			"A9C5DF4D22E99998D9875A5110C01C5A2F6059E7",
+			# Remy Maucherat <remm@apache.org>
+			"48F8E69F6390C9F25CFEDCD268248959359E722B",
 			# trailing comma 👀
 			empty
 		],
