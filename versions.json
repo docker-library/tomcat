@@ -2,10 +2,16 @@
   "10.1": {
     "sha512": "0a62e55c1ff9f8f04d7aff938764eac46c289eda888abf43de74a82ceb7d879e94a36ea3e5e46186bc231f07871fcc4c58f11e026f51d4487a473badb21e9355",
     "variants": [
+      "jdk21/temurin-noble",
+      "jre21/temurin-noble",
       "jdk21/temurin-jammy",
       "jre21/temurin-jammy",
+      "jdk17/temurin-noble",
+      "jre17/temurin-noble",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
+      "jdk11/temurin-noble",
+      "jre11/temurin-noble",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy"
     ],
@@ -14,6 +20,8 @@
   "11.0": {
     "sha512": "a6d41340304a8e2b48677b6043badcc28cf336b995107b6b08b71a8a9fe9da07628e6cef4ca60795d15d3c0744833fc96707e6ecf696942443cadab92301735f",
     "variants": [
+      "jdk21/temurin-noble",
+      "jre21/temurin-noble",
       "jdk21/temurin-jammy",
       "jre21/temurin-jammy"
     ],
@@ -22,23 +30,25 @@
   "9.0": {
     "sha512": "b22054c9141782232a693765d23d944f0f50774af17dd8968331e020b425e71459b5877a7ba8c2121246a5ce47e6b6a31c3f4215ef133e942da45b49cb534948",
     "variants": [
+      "jdk21/temurin-noble",
+      "jre21/temurin-noble",
       "jdk21/temurin-jammy",
       "jre21/temurin-jammy",
       "jdk21/corretto-al2",
+      "jdk17/temurin-noble",
+      "jre17/temurin-noble",
       "jdk17/temurin-jammy",
       "jre17/temurin-jammy",
-      "jdk17/temurin-focal",
-      "jre17/temurin-focal",
       "jdk17/corretto-al2",
+      "jdk11/temurin-noble",
+      "jre11/temurin-noble",
       "jdk11/temurin-jammy",
       "jre11/temurin-jammy",
-      "jdk11/temurin-focal",
-      "jre11/temurin-focal",
       "jdk11/corretto-al2",
+      "jdk8/temurin-noble",
+      "jre8/temurin-noble",
       "jdk8/temurin-jammy",
       "jre8/temurin-jammy",
-      "jdk8/temurin-focal",
-      "jre8/temurin-focal",
       "jdk8/corretto-al2"
     ],
     "version": "9.0.91"

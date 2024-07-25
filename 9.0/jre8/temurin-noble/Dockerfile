@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:8-jre-noble
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -23,7 +23,7 @@ ENV TOMCAT_MAJOR 9
 ENV TOMCAT_VERSION 9.0.91
 ENV TOMCAT_SHA512 b22054c9141782232a693765d23d944f0f50774af17dd8968331e020b425e71459b5877a7ba8c2121246a5ce47e6b6a31c3f4215ef133e942da45b49cb534948
 
-COPY --from=tomcat:9.0.91-jdk17-temurin-focal $CATALINA_HOME $CATALINA_HOME
+COPY --from=tomcat:9.0.91-jdk8-temurin-noble $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
 	apt-get update; \
 	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \

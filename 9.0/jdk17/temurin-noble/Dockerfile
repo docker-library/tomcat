@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM eclipse-temurin:8-jdk-focal
+FROM eclipse-temurin:17-jdk-noble
 
 ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
