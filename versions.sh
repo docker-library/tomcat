@@ -26,12 +26,27 @@ _bashbrew_list() {
 }
 
 allVariants='[]'
-for javaVersion in 21 17 11 8; do
+# LTS versions in descending order followed by all other versions (also in descending order)
+for javaVersion in \
+	21 \
+	17 \
+	11 \
+	8 \
+	25 \
+	24 \
+	23 \
+	22 \
+	20 \
+	19 \
+	18 \
+; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
-		temurin-{noble,jammy} \
-		openjdk{,-slim}-{bookworm,bullseye,buster} \
-		corretto-al2 \
+		temurin-{noble,jammy,focal,alpine,ubi9-minimal} \
+		openjdk-{{,slim-}{bookworm,bullseye},alpine{3.21,3.20,3.19,3.18},oraclelinux{9,8}} \
+		corretto-{al2023,al2,alpine{3.21,3.20,3.19,3.18}} \
+		sapmachine-{noble,jammy,focal} \
+		semeru-{noble,jammy,focal} \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
