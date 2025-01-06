@@ -15,10 +15,6 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-# see https://www.apache.org/dist/tomcat/tomcat-10/KEYS
-# see also "versions.sh" (https://github.com/docker-library/tomcat/blob/master/versions.sh)
-ENV GPG_KEYS 5C3C5F3E314C866292F359A8F3AD5C94A67F707E A9C5DF4D22E99998D9875A5110C01C5A2F6059E7
-
 ENV TOMCAT_MAJOR 10
 ENV TOMCAT_VERSION 10.1.34
 ENV TOMCAT_SHA512 e29c4d0e26295d64dfeee399e7719b5baac2682ac0e7b53702f26d630fea761f93ddf60674dfe87c41ddd9b79d4938a6a533a280bb3d7fb83c2a1b7cd5da6b09
@@ -58,10 +54,23 @@ RUN set -eux; \
 	ddist 'tomcat.tar.gz' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz"; \
 	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
 	ddist 'tomcat.tar.gz.asc' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz.asc"; \
-	export GNUPGHOME="$(mktemp -d)"; \
-	for key in $GPG_KEYS; do \
-		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
+	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME; \
+	curl -fL -o upstream-KEYS 'https://www.apache.org/dist/tomcat/tomcat-10/KEYS'; \
+	gpg --batch --import upstream-KEYS; \
+# filter upstream KEYS file to *just* known/precomputed fingerprints
+	printf '' > filtered-KEYS; \
+# see https://www.apache.org/dist/tomcat/tomcat-10/KEYS
+	for key in \
+		'A9C5DF4D22E99998D9875A5110C01C5A2F6059E7' \
+		'5C3C5F3E314C866292F359A8F3AD5C94A67F707E' \
+	; do \
+		gpg --batch --fingerprint "$key"; \
+		gpg --batch --export --armor "$key" >> filtered-KEYS; \
 	done; \
+	gpgconf --kill all; \
+	rm -rf "$GNUPGHOME"; \
+	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME; \
+	gpg --batch --import filtered-KEYS; \
 	gpg --batch --verify tomcat.tar.gz.asc tomcat.tar.gz; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
