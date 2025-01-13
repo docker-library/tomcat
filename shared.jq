@@ -9,7 +9,7 @@ def is_supported_java_version(java):
 	# http://tomcat.apache.org/whichversion.html  ("Supported Java Versions")
 	(env.version | tonumber) as $version
 	| if $version >= 11.0 then
-		java >= 21
+		java >= 17
 	elif $version >= 10.1 then
 		java >= 11
 	else # $version >= 9.0

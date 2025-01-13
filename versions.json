@@ -23,7 +23,11 @@
       "jdk21/temurin-noble",
       "jre21/temurin-noble",
       "jdk21/temurin-jammy",
-      "jre21/temurin-jammy"
+      "jre21/temurin-jammy",
+      "jdk17/temurin-noble",
+      "jre17/temurin-noble",
+      "jdk17/temurin-jammy",
+      "jre17/temurin-jammy"
     ],
     "version": "11.0.2"
   },
