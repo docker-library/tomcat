@@ -30,7 +30,7 @@ for javaVersion in 21 17 11 8; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
 		temurin-{noble,jammy} \
-		openjdk{,-slim}-{bookworm,bullseye,buster} \
+		openjdk{,-slim}-{trixie,bookworm} \
 		corretto-al2 \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
