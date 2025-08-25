@@ -32,10 +32,5 @@ def has_openssl_ge_3(variant):
 	variant | (
 		# amazonlinux
 		contains("al2") # corretto
-		# debian
-		or contains("bullseye") # openjdk
-		or contains("buster") # openjdk
-		# ubuntu
-		or contains("focal") # temurin
 	) | not
 ;
