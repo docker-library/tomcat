@@ -2,6 +2,10 @@
   "10.1": {
     "sha512": "20da89fa77fb8d4dbfccf6c68383751348169542aad9d3cbcaf82011337355b9847b883cc71678fa6cc71ef3f55e8d5d7a09a53238b86011816fa989f9c4ff5e",
     "variants": [
+      "jdk25/temurin-noble",
+      "jre25/temurin-noble",
+      "jdk25/temurin-jammy",
+      "jre25/temurin-jammy",
       "jdk21/temurin-noble",
       "jre21/temurin-noble",
       "jdk21/temurin-jammy",
@@ -20,6 +24,10 @@
   "11.0": {
     "sha512": "a26b2269530fd2fc834e9b1544962f6524cf87925de43b05ad050e66b5eaa76a4ad754a2c5fc4f851baf75a0ea1b0ed8f51082300393a4c35d8c2da0d7c535bd",
     "variants": [
+      "jdk25/temurin-noble",
+      "jre25/temurin-noble",
+      "jdk25/temurin-jammy",
+      "jre25/temurin-jammy",
       "jdk21/temurin-noble",
       "jre21/temurin-noble",
       "jdk21/temurin-jammy",
@@ -34,6 +42,10 @@
   "9.0": {
     "sha512": "29341c17d92b8f72700c7e0626405a63f3ba30737019fbe6a25cafbd929c5e14aa99817e1d4990da11593400e8e5977da9f9f7f9c097d95f820783f33a3cf9b7",
     "variants": [
+      "jdk25/temurin-noble",
+      "jre25/temurin-noble",
+      "jdk25/temurin-jammy",
+      "jre25/temurin-jammy",
       "jdk21/temurin-noble",
       "jre21/temurin-noble",
       "jdk21/temurin-jammy",
