@@ -40,7 +40,7 @@
     "version": "11.0.14"
   },
   "9.0": {
-    "sha512": "fc55589f28bf6659928167461c741649b6005b64285dd81df05bb5ee40f4c6de59b8ee3af84ff756ae1513fc47f5f73070e29313b555e27f096f25881c69841d",
+    "sha512": "1b8d9ba5c5e2ed2b4134a3fe6f206b3bb1184391e5c112ca7ea6a49ecadca63a7fc565c83caa610f0a8341988777870302a8162a84f0880af751531cdd4a2ee5",
     "variants": [
       "jdk25/temurin-noble",
       "jre25/temurin-noble",
@@ -67,6 +67,6 @@
       "jre8/temurin-jammy",
       "jdk8/corretto-al2"
     ],
-    "version": "9.0.112"
+    "version": "9.0.113"
   }
 }
