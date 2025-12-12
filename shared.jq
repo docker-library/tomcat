@@ -16,9 +16,26 @@ def is_supported_java_version(java):
 		java >= 8
 	end
 ;
+def is_alpine:
+	vendor_variant | contains("alpine")
+;
+def variant_is_al2: # NOT al20XX
+	contains("al2") and (contains("al20") | not)
+;
+def is_yum:
+	vendor_variant | (
+		variant_is_al2
+		or contains("oraclelinux7")
+	)
+;
+def variant_is_microdnf:
+	contains("oraclelinux") or contains("ubi")
+;
 def is_apt:
 	vendor_variant | (
-		contains("al2")
+		variant_is_microdnf
+		or contains("al2")
+		or contains("alpine")
 	) | not
 ;
 def is_native_ge_2:
@@ -31,6 +48,9 @@ def has_openssl_ge_3(variant):
 	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
 	variant | (
 		# amazonlinux
-		contains("al2") # corretto
+		variant_is_al2 # corretto
+		# oraclelinux
+		or contains("oraclelinux7") # openjdk
+		or contains("oraclelinux8") # openjdk
 	) | not
 ;
