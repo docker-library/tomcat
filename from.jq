@@ -14,12 +14,22 @@ def vendor_variant:
 ;
 def from:
 	vendor_variant
-	| if test("^corretto-") then
+	| if test("^azul-zulu-") then
+		"azul-zulu:" + java_version + "-" + java_variant + ltrimstr("azul-zulu")
+	elif test("^corretto-") then
 		"amazoncorretto:" + java_version + ltrimstr("corretto") + "-" + java_variant
 	elif test("^openjdk-") then
-		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
+		# TODO this "-ea" needs to be handled somewhere else / further out so we don't ever label "26-ea" as just "26", for example (https://github.com/docker-library/openjdk/pull/550)
+		"openjdk:" + java_version + "-ea-" + java_variant + ltrimstr("openjdk")
+	elif test("^sapmachine-") and java_variant == "jdk" then
+		"sapmachine:" + java_version + "-ubuntu" + ltrimstr("sapmachine")
+	elif test("^semeru-") then
+		"ibm-semeru-runtimes:open-" + java_version + "-" + java_variant + ltrimstr("semeru")
 	elif test("^temurin-") then
-		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")
+		"eclipse-temurin:" + java_version + "-" + java_variant + (
+			ltrimstr("temurin")
+			| sub("alpine(?=[0-9]+)"; "alpine-") # temurin does "-alpine-N.NN" style tags
+		)
 	else
 		error("unknown vendor variant: " + .)
 	end
