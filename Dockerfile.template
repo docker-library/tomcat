@@ -21,7 +21,6 @@ ENV TOMCAT_SHA512 {{ .sha512 }}
 {{ if java_variant == "jdk" then ( -}}
 RUN set -eux; \
 	\
-{{ if is_apt then ( -}}
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -29,28 +28,6 @@ RUN set -eux; \
 		curl \
 		gnupg \
 	; \
-{{ ) else ( -}}
-# http://yum.baseurl.org/wiki/YumDB.html
-	if ! command -v yumdb > /dev/null; then \
-		yum install -y --setopt=skip_missing_names_on_install=False yum-utils; \
-		yumdb set reason dep yum-utils; \
-	fi; \
-# a helper function to "yum install" things, but only if they aren't installed (and to set their "reason" to "dep" so "yum autoremove" can purge them for us)
-	_yum_install_temporary() { ( set -eu +x; \
-		local pkg todo=''; \
-		for pkg; do \
-			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
-				todo="$todo $pkg"; \
-			fi; \
-		done; \
-		if [ -n "$todo" ]; then \
-			set -x; \
-			yum install -y --setopt=skip_missing_names_on_install=False $todo; \
-			yumdb set reason dep $todo; \
-		fi; \
-	) }; \
-	_yum_install_temporary gzip tar; \
-{{ ) end -}}
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -122,9 +99,7 @@ RUN set -eux; \
 		gpg --batch --fingerprint "$key"; \
 		gpg --batch --export --armor "$key" >> filtered-KEYS; \
 	done; \
-{{ if vendor_variant | contains("al2") then "" else ( -}}
 	gpgconf --kill all; \
-{{ ) end -}}
 	rm -rf "$GNUPGHOME"; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME; \
 	gpg --batch --import filtered-KEYS; \
@@ -132,9 +107,7 @@ RUN set -eux; \
 	tar -xf tomcat.tar.gz --strip-components=1; \
 	rm bin/*.bat; \
 	rm tomcat.tar.gz*; \
-{{ if vendor_variant | contains("al2") then "" else ( -}}
 	gpgconf --kill all; \
-{{ ) end -}}
 	rm -rf "$GNUPGHOME"; \
 	\
 # https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Default_web_applications
@@ -144,7 +117,6 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
-{{ if is_apt then ( -}}
 	apt-get install -y --no-install-recommends \
 		dpkg-dev \
 		gcc \
@@ -152,25 +124,13 @@ RUN set -eux; \
 		libssl-dev \
 		make \
 	; \
-{{ ) else ( -}}
-	_yum_install_temporary \
-		apr-devel \
-		gcc \
-		make \
-		openssl11-devel \
-	; \
-{{ ) end -}}
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
-{{ if is_apt then ( -}}
 		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-{{ ) else "" end -}}
 		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
-{{ if is_apt then ( -}}
 			--build="$gnuArch" \
-{{ ) else "" end -}}
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -186,7 +146,6 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
-{{ if is_apt then ( -}}
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
 	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
@@ -203,23 +162,6 @@ RUN set -eux; \
 	\
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*; \
-{{ ) else ( -}}
-# mark any explicit dependencies as manually installed
-	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
-		| xargs -rt readlink -e \
-		| sort -u \
-		| xargs -rt rpm --query --whatprovides \
-		| sort -u \
-		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
-		| xargs -r yumdb set reason user \
-	; \
-	\
-# clean up anything added temporarily and not later marked as necessary
-	yum autoremove -y; \
-	yum clean all; \
-	rm -rf /var/cache/yum; \
-{{ ) end -}}
 	\
 # sh removes env vars it doesn't support (ones with periods)
 # https://github.com/docker-library/tomcat/issues/77
@@ -235,15 +177,9 @@ RUN set -eux; \
 {{ ) else ( -}}
 COPY --from=tomcat:{{ .version }}-jdk{{ java_version }}-{{ vendor_variant }} $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
-{{ if is_apt then ( -}}
 	apt-get update; \
 	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
 	rm -rf /var/lib/apt/lists/*
-{{ ) else ( -}}
-	xargs -rt yum install -y --setopt=skip_missing_names_on_install=False < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
-	yum clean all; \
-	rm -rf /var/cache/yum
-{{ ) end -}}
 {{ ) end -}}
 
 # verify Tomcat Native is working properly

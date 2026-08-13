@@ -14,9 +14,7 @@ def vendor_variant:
 ;
 def from:
 	vendor_variant
-	| if test("^corretto-") then
-		"amazoncorretto:" + java_version + ltrimstr("corretto") + "-" + java_variant
-	elif test("^openjdk-") then
+	| if test("^openjdk-") then
 		"openjdk:" + java_version + "-" + java_variant + ltrimstr("openjdk")
 	elif test("^temurin-") then
 		"eclipse-temurin:" + java_version + "-" + java_variant + ltrimstr("temurin")

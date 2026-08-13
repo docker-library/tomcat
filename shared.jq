@@ -16,21 +16,9 @@ def is_supported_java_version(java):
 		java >= 8
 	end
 ;
-def is_apt:
-	vendor_variant | (
-		contains("al2")
-	) | not
-;
 def is_native_ge_2:
 	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
 	# https://github.com/docker-library/tomcat/pull/272
 	(env.version | tonumber) as $version
 	| $version >= 10.1
-;
-def has_openssl_ge_3(variant):
-	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
-	variant | (
-		# amazonlinux
-		contains("al2") # corretto
-	) | not
 ;
