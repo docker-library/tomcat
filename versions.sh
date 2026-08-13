@@ -31,7 +31,6 @@ for javaVersion in 25 21 17 11 8; do
 	for vendorVariant in \
 		temurin-{noble,jammy} \
 		openjdk{,-slim}-{trixie,bookworm} \
-		corretto-al2 \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
@@ -97,10 +96,6 @@ for version in "${versions[@]}"; do
 						| tonumber
 					) as $java_version
 					| is_supported_java_version($java_version)
-						and (
-							(is_native_ge_2 | not)
-							or has_openssl_ge_3(.)
-						)
 				))
 			),
 		}
