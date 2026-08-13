@@ -21,6 +21,7 @@ ENV TOMCAT_SHA512 {{ .sha512 }}
 {{ if java_variant == "jdk" then ( -}}
 RUN set -eux; \
 	\
+{{ if is_apt then ( -}}
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -28,6 +29,33 @@ RUN set -eux; \
 		curl \
 		gnupg \
 	; \
+{{ ) elif is_alpine then ( -}}
+	apk add --no-cache --virtual .fetch-deps gnupg; \
+{{ ) else ( -}}
+{{ if is_microdnf then ( -}}
+# removing dnf after it is installed gets really hairy, so we'll just live with it (since we need it for "dnf mark")
+	microdnf install -y dnf; \
+{{ ) else "" end -}}
+# a helper function to install things, but only if they aren't installed (and to mark them so "autoremove" can purge them for us)
+	_install_temporary() { ( set -eu +x; \
+		local pkg todo=''; \
+		for pkg; do \
+			if ! rpm --query "$pkg" > /dev/null 2>&1; then \
+				todo="$todo $pkg"; \
+			fi; \
+		done; \
+		if [ -n "$todo" ]; then \
+			set -x; \
+			dnf install -y $todo; \
+			dnf mark remove $todo; \
+		fi; \
+	) }; \
+	_install_temporary gzip tar; \
+{{ if vendor_variant | contains("al20") then ( -}}
+# gnupg2-minimal (installed by default) conflicts with gnupg2 and does not include dirmngr so cannot fetch keys
+	dnf install -y --allowerasing gnupg2; \
+{{ ) else "" end -}}
+{{ ) end -}}
 	\
 	ddist() { \
 		local f="$1"; shift; \
@@ -43,7 +71,7 @@ RUN set -eux; \
 # if all else fails, let's try Maven (https://www.mail-archive.com/users@tomcat.apache.org/msg134940.html; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat; https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/)
 			${mvnFile:+"https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/$mvnFile"} \
 		; do \
-			if curl -fL -o "$f" "$distUrl" && [ -s "$f" ]; then \
+			if {{ if is_alpine then "wget -O" else "curl -fL -o" end }} "$f" "$distUrl" && [ -s "$f" ]; then \
 				success=1; \
 				break; \
 			fi; \
@@ -52,10 +80,10 @@ RUN set -eux; \
 	}; \
 	\
 	ddist 'tomcat.tar.gz' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz"; \
-	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum --strict --check -; \
+	echo "$TOMCAT_SHA512 *tomcat.tar.gz" | sha512sum {{ if is_alpine then "-c" else "--strict --check" end }} -; \
 	ddist 'tomcat.tar.gz.asc' "tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz.asc" "$TOMCAT_VERSION/tomcat-$TOMCAT_VERSION.tar.gz.asc"; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME; \
-	curl -fL -o upstream-KEYS {{ "https://www.apache.org/dist/tomcat/tomcat-\(major)/KEYS" | @sh }}; \
+	{{ if is_alpine then "wget -O" else "curl -fL -o" end }} upstream-KEYS {{ "https://www.apache.org/dist/tomcat/tomcat-\(major)/KEYS" | @sh }}; \
 	gpg --batch --import upstream-KEYS; \
 # filter upstream KEYS file to *just* known/precomputed fingerprints
 	printf '' > filtered-KEYS; \
@@ -117,6 +145,7 @@ RUN set -eux; \
 	\
 	nativeBuildDir="$(mktemp -d)"; \
 	tar -xf bin/tomcat-native.tar.gz -C "$nativeBuildDir" --strip-components=1; \
+{{ if is_apt then ( -}}
 	apt-get install -y --no-install-recommends \
 		dpkg-dev \
 		gcc \
@@ -124,13 +153,43 @@ RUN set -eux; \
 		libssl-dev \
 		make \
 	; \
+{{ ) elif is_alpine then ( -}}
+	apk add --no-cache --virtual .build-deps \
+		apr-dev \
+		dpkg-dev dpkg \
+		gcc \
+		libc-dev \
+		make \
+{{ if is_native_ge_2 then ( -}}
+		openssl3-dev \
+{{ ) else ( -}}
+		openssl-dev \
+{{ ) end -}}
+	; \
+{{ ) else ( -}}
+	_install_temporary \
+		apr-devel \
+		findutils \
+		gcc \
+		make \
+		openssl-devel \
+{{ if is_microdnf then ( -}}
+# "gcc: error: /usr/lib/rpm/redhat/redhat-hardened-cc1: No such file or directory"
+		redhat-rpm-config \
+{{ ) else "" end -}}
+	; \
+{{ ) end -}}
 	( \
 		export CATALINA_HOME="$PWD"; \
 		cd "$nativeBuildDir/native"; \
+{{ if is_apt or is_alpine then ( -}}
 		gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+{{ ) else "" end -}}
 		aprConfig="$(command -v apr-1-config)"; \
 		./configure \
+{{ if is_apt or is_alpine then ( -}}
 			--build="$gnuArch" \
+{{ ) else "" end -}}
 			--libdir="$TOMCAT_NATIVE_LIBDIR" \
 			--prefix="$CATALINA_HOME" \
 			--with-apr="$aprConfig" \
@@ -146,6 +205,18 @@ RUN set -eux; \
 	rm -rf "$nativeBuildDir"; \
 	rm bin/tomcat-native.tar.gz; \
 	\
+{{ if is_alpine then "" else ( -}}
+# sh removes env vars it doesn't support (ones with periods)
+# https://github.com/docker-library/tomcat/issues/77
+	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
+	\
+{{ ) end -}}
+# fix permissions (especially for running as non-root)
+# https://github.com/docker-library/tomcat/issues/35
+	chmod -R +rX .; \
+	chmod 1777 logs temp work; \
+	\
+{{ if is_apt then ( -}}
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
 	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; \
@@ -162,24 +233,65 @@ RUN set -eux; \
 	\
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*; \
+{{ ) elif is_alpine then ( -}}
+# mark any explicit dependencies as manually installed
+	deps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive "$TOMCAT_NATIVE_LIBDIR" \
+			| tr ',' '\n' \
+			| sort -u \
+{{ if is_native_ge_2 and (vendor_variant | contains("alpine3.15") or contains("alpine3.16")) then ( -}}
+# https://git.alpinelinux.org/aports/tree/main/openssl3/APKBUILD?h=3.16-stable#n23 ("sonameprefix")
+# see also "apk info --all libssl3" ("so:openssl3:so:libssl.so.3=3" under "provides:")
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { if ($1 ~ /libssl|libcrypto/) { print "so:openssl3:so:" $1 } else { print "so:" $1 } }' \
+{{ ) else ( -}}
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+{{ ) end -}}
+			| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
+	)"; \
+	apk add --no-network --virtual .tomcat-native-deps $deps; \
 	\
-# sh removes env vars it doesn't support (ones with periods)
-# https://github.com/docker-library/tomcat/issues/77
-	find ./bin/ -name '*.sh' -exec sed -ri 's|^#!/bin/sh$|#!/usr/bin/env bash|' '{}' +; \
+	apk del --no-network .fetch-deps .build-deps; \
+{{ ) else ( -}}
+# mark any explicit dependencies as manually installed
+	find "$TOMCAT_NATIVE_LIBDIR" -type f -executable -exec ldd '{}' ';' \
+		| awk '/=>/ && $(NF-1) != "=>" { print $(NF-1) }' \
+		| xargs -rt readlink -e \
+		| sort -u \
+		| xargs -rt rpm --query --whatprovides \
+		| sort -u \
+		| tee "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt" \
+		| xargs -r dnf mark install \
+	; \
 	\
-# fix permissions (especially for running as non-root)
-# https://github.com/docker-library/tomcat/issues/35
-	chmod -R +rX .; \
-	chmod 1777 logs temp work; \
+# clean up anything added temporarily and not later marked as necessary
+	dnf autoremove -y; \
+	dnf clean all; \
+	rm -rf /var/cache/dnf; \
+{{ ) end -}}
 	\
 # smoke test
 	catalina.sh version
 {{ ) else ( -}}
 COPY --from=tomcat:{{ .version }}-jdk{{ java_version }}-{{ vendor_variant }} $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
+{{ if is_apt then ( -}}
 	apt-get update; \
 	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
 	rm -rf /var/lib/apt/lists/*
+{{ ) elif is_alpine then ( -}}
+	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
+	apk add --no-cache --virtual .tomcat-native-deps $deps
+{{ ) elif vendor_variant | contains("al20") or contains("ubi") then ( -}}
+# no xargs in al20XX and ubiX-minimal /o\
+	deps="$(cat "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt")"; \
+	{{ if is_microdnf then "microdnf" else "dnf" end }} install -y $deps; \
+	{{ if is_microdnf then "microdnf" else "dnf" end }} clean all; \
+	rm -rf /var/cache/dnf
+{{ ) else ( -}}
+	xargs -rt {{ if is_microdnf then "microdnf" else "dnf" end }} install -y < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
+	{{ if is_microdnf then "microdnf" else "dnf" end }} clean all; \
+	rm -rf /var/cache/dnf
+{{ ) end -}}
 {{ ) end -}}
 
 # verify Tomcat Native is working properly
