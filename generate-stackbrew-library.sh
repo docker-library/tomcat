@@ -90,9 +90,11 @@ for version; do
 	declare -A vendorAliases=()
 	defaultTemurinVariant=
 	for aliasToRegex in \
-		'corretto:^corretto-' \
-		'openjdk:openjdk-(?!slim)' 'openjdk-slim:^openjdk-slim' \
-		'temurin:^temurin-' \
+		'corretto:^corretto-(?!alpine)' 'corretto-alpine:^corretto-alpine' \
+		'openjdk:openjdk-(?!slim|alpine)' 'openjdk-slim:^openjdk-slim' 'openjdk-alpine:^openjdk-alpine' \
+		'sapmachine:^sapmachine-' \
+		'semeru:^semeru-' \
+		'temurin:^temurin-(?!alpine)' 'temurin-alpine:^temurin-alpine' \
 	; do
 		alias="${aliasToRegex%%:*}"
 		regex="${aliasToRegex#$alias:}"
