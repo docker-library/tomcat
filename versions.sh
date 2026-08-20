@@ -26,11 +26,27 @@ _bashbrew_list() {
 }
 
 allVariants='[]'
-for javaVersion in 25 21 17 11 8; do
+# LTS versions in descending order followed by all other versions (also in descending order)
+for javaVersion in \
+	25 \
+	21 \
+	17 \
+	11 \
+	8 \
+	27 \
+	26 \
+	24 \
+; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
-		temurin-{noble,jammy} \
-		openjdk{,-slim}-{trixie,bookworm} \
+		temurin-{resolute,noble,jammy,alpine{3.24,3.23,3.22,3.21,3.20},ubi{10,9}-minimal} \
+		\
+		openjdk-{{,slim-}{trixie,bookworm},alpine{3.24,3.23,3.22,3.21},oraclelinux{10,9,8}} \
+		\
+		azul-zulu-{debian13,alpine{3.24,3.23}} \
+		corretto-{al2023,alpine{3.24,3.23,3.22,3.21,3.20,3.19}} \
+		sapmachine-{resolute,noble,jammy} \
+		semeru-{resolute,noble,jammy} \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
 			export variant="$javaVariant/$vendorVariant"
@@ -96,6 +112,10 @@ for version in "${versions[@]}"; do
 						| tonumber
 					) as $java_version
 					| is_supported_java_version($java_version)
+						and (
+							(is_native_ge_2 | not)
+							or has_openssl_ge_3(.)
+						)
 				))
 			),
 		}
