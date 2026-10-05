@@ -29,7 +29,7 @@ allVariants='[]'
 for javaVersion in 25 21 17 11 8; do
 	# Eclipse Temurin, followed by OpenJDK, and then all other variants alphabetically
 	for vendorVariant in \
-		temurin-{noble,jammy} \
+		temurin-{resolute,noble,jammy} \
 		openjdk{,-slim}-{trixie,bookworm} \
 	; do
 		for javaVariant in {jdk,jre}"$javaVersion"; do
