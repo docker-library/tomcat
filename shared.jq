@@ -16,9 +16,27 @@ def is_supported_java_version(java):
 		java >= 8
 	end
 ;
+def is_alpine:
+	vendor_variant | contains("alpine")
+;
+def is_microdnf:
+	vendor_variant
+	| contains("oraclelinux") or contains("ubi")
+;
+def is_apt:
+	is_microdnf
+	or (vendor_variant | contains("al2") or contains("alpine"))
+	| not
+;
 def is_native_ge_2:
 	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
 	# https://github.com/docker-library/tomcat/pull/272
 	(env.version | tonumber) as $version
 	| $version >= 10.1
+;
+def has_openssl_ge_3(variant):
+	# https://github.com/apache/tomcat-native/commit/f7930fa16f095717cfc641a8d24e60c343765adc
+	variant | (
+		contains("oraclelinux8") # openjdk
+	) | not
 ;
